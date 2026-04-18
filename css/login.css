@@ -1,0 +1,285 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: url('../images/bg-image.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #1c1e21;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    display: flex;
+    max-width: 980px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Left side (Branding) */
+.brand-section {
+    width: 50%;
+    padding-right: 40px;
+    padding-bottom: 80px;
+}
+
+.brand-title {
+    color: #1877f2;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    margin-bottom: 10px;
+}
+
+.brand-subtitle {
+    font-size: 26px;
+    line-height: 32px;
+    width: 100%;
+    max-width: 500px;
+}
+
+/* Right side (Forms) */
+.form-section {
+    width: 400px;
+}
+
+.auth-box {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+}
+
+.auth-box form {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-box input[type="text"],
+.auth-box input[type="email"],
+.auth-box input[type="password"] {
+    font-size: 17px;
+    padding: 14px 16px;
+    margin-bottom: 15px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+    outline: none;
+}
+
+.auth-box input[type="text"]:focus,
+.auth-box input[type="email"]:focus,
+.auth-box input[type="password"]:focus {
+    border-color: #1877f2;
+    box-shadow: 0 0 0 2px #e7f3ff;
+}
+
+.password-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    width: 100%;
+    margin-bottom: 0;
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #606770;
+    font-size: 16px;
+}
+
+.toggle-password:hover {
+    color: #1c1e21;
+}
+
+.btn-login {
+    background-color: #1877f2;
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+    line-height: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-login:hover {
+    background-color: #166fe5;
+}
+
+.forgot-password {
+    margin-top: 15px;
+}
+
+.forgot-password a {
+    color: #1877f2;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.forgot-password a:hover {
+    text-decoration: underline;
+}
+
+.divider {
+    border-bottom: 1px solid #dadde1;
+    margin: 20px 0;
+}
+
+.create-account {
+    margin-bottom: 5px;
+}
+
+.btn-signup {
+    background-color: #42b72a;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: 700;
+    padding: 0 16px;
+    height: 48px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-signup:hover {
+    background-color: #36a420;
+}
+
+/* Supplemental Form Styles (Signup, Forgot Pass) */
+.box-header {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.box-header h2 {
+    font-size: 32px;
+    color: #1c1e21;
+}
+
+.box-header p {
+    font-size: 15px;
+    color: #606770;
+    margin-bottom: 10px;
+}
+
+.box-header hr {
+    border: none;
+    border-bottom: 1px solid #dadde1;
+}
+
+.terms-text {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.btn-wide {
+    width: 100%;
+}
+
+.back-to-login {
+    margin-top: 15px;
+}
+
+.back-to-login a {
+    color: #1877f2;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-cancel {
+    background-color: #f5f6f7;
+    color: #4b4f56;
+    border: 1px solid #ccd0d5;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0 20px;
+    height: 38px;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #ebedf0;
+}
+
+.action-buttons .btn-login {
+    height: 38px;
+    line-height: normal;
+    font-size: 15px;
+    padding: 0 20px;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+    .login-container {
+        flex-direction: column;
+        text-align: center;
+        padding-top: 40px;
+    }
+
+    .brand-section {
+        width: 100%;
+        padding-right: 0;
+        padding-bottom: 30px;
+    }
+
+    .brand-title {
+        font-size: 40px;
+    }
+
+    .brand-subtitle {
+        font-size: 20px;
+        margin: 0 auto;
+    }
+
+    .form-section {
+        width: 100%;
+        max-width: 400px;
+    }
+}

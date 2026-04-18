@@ -1,0 +1,454 @@
+:root {
+    --primary-bg: #F0F4F8;
+    --sidebar-bg: #1B2B3E;
+    --sidebar-text: #A0B2C6;
+    --sidebar-text-hover: #FFFFFF;
+    --sidebar-active-bg: #2C3E50;
+    
+    --card-bg: #FFFFFF;
+    --text-main: #333333;
+    --text-muted: #7E8C9A;
+    --border-color: #E2E8F0;
+    
+    --color-feed-level: #2EBA8A;
+    --color-feed-low: #EF5350;
+    --color-last-feed: #3498DB;
+    --color-next-feed: #F39C12;
+    
+    --success: #2EBA8A;
+    --warning: #F39C12;
+    --danger: #E74C3C;
+    --info: #3498DB;
+    
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+    --border-radius: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* Use the uploaded image as a background */
+    background: url('../images/bg-image.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* Semi-transparent overlay to keep cards readable */
+.main-content {
+    background-color: rgba(240, 244, 248, 0.85); /* primary-bg with opacity */
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
+/* Layout */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background-color: var(--sidebar-bg);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 30px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-header p {
+    font-size: 13px;
+    color: var(--sidebar-text);
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 20px 0;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.sidebar-nav li a i {
+    width: 24px;
+    margin-right: 12px;
+    font-size: 18px;
+}
+
+.sidebar-nav li:hover a, .sidebar-nav li.active a {
+    color: var(--sidebar-text-hover);
+    background-color: var(--sidebar-active-bg);
+    border-left: 4px solid var(--info);
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+    overflow-y: auto;
+}
+
+/* Header */
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.header-title h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--sidebar-bg);
+}
+
+#live-clock-card {
+    background-color: var(--sidebar-bg);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    text-align: right;
+    min-width: 250px;
+}
+
+.clock-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--sidebar-text);
+    margin-bottom: 5px;
+}
+
+.clock-time {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.clock-time span#clock-ampm {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.clock-date {
+    font-size: 13px;
+    color: var(--sidebar-text);
+    margin-top: 5px;
+}
+
+/* Status Cards */
+.status-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    font-weight: 600;
+    font-size: 15px;
+    padding: 15px 20px;
+    color: var(--text-muted);
+}
+
+.card-header.border-bottom {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header.d-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    font-size: 16px;
+    color: var(--sidebar-bg);
+}
+
+.card-body {
+    padding: 20px;
+    flex: 1;
+}
+
+.card-body.p-0 {
+    padding: 0;
+}
+
+/* Card Specifics */
+.feed-level-card .card-header { color: var(--color-feed-level); }
+.last-feeding-card .card-header { color: var(--color-last-feed); }
+.next-feeding-card .card-header { color: var(--color-next-feed); }
+
+.level-value, .time-value {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--sidebar-bg);
+    margin-bottom: 5px;
+    line-height: 1.1;
+}
+
+.level-status, .info-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 15px;
+}
+
+.progress-bar-container {
+    height: 8px;
+    background-color: var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: var(--color-feed-level);
+    transition: width 0.5s ease;
+}
+
+.progress-bar.low {
+    background-color: var(--color-feed-low);
+}
+
+/* Details Section */
+.details-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.schedule-list, .logs-list {
+    list-style: none;
+}
+
+.schedule-list li, .logs-list li {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.schedule-list li:last-child, .logs-list li:last-child {
+    border-bottom: none;
+}
+
+.schedule-icon {
+    color: var(--color-next-feed);
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+.schedule-day {
+    font-weight: 600;
+    width: 50px;
+}
+.schedule-time {
+    flex: 1;
+}
+
+.log-icon {
+    margin-right: 15px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.log-icon.completed { color: var(--success); }
+.log-icon.warning { color: var(--warning); }
+.log-icon.error { color: var(--danger); }
+
+.log-time {
+    font-weight: 500;
+    width: 90px;
+    font-size: 13px;
+}
+.log-message {
+    flex: 1;
+    color: var(--text-muted);
+}
+
+/* Button */
+.btn-add {
+    background-color: var(--info);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-add:hover {
+    background-color: #2980B9;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+}
+
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--sidebar-bg);
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .app-container {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        height: 100vh;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding: 0;
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .sidebar-header {
+        padding: 30px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+        width: 100%;
+    }
+
+    .sidebar-header h2, .sidebar-header p {
+        display: block;
+    }
+    
+    .sidebar-nav ul {
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        width: 100%;
+    }
+    
+    .sidebar-nav li {
+        width: 100%;
+    }
+    
+    .sidebar-nav li a {
+        padding: 15px 25px;
+        font-size: 16px;
+        justify-content: flex-start;
+        width: 100%;
+    }
+    
+    .sidebar-nav li a i {
+        margin-right: 12px;
+        font-size: 18px;
+    }
+    
+    .sidebar-nav li:hover a, .sidebar-nav li.active a {
+        border-left: 4px solid var(--info);
+        border-bottom: none;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .top-header {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    #live-clock-card {
+        width: 100%;
+        text-align: center;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 15px;
+        margin-left: 0;
+        width: 100%;
+    }
+    
+    .status-cards {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .details-section {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fin & Feather Feeding System</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Overlay -->
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+        
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Fin & Feather</h2>
+                <p>Feeding System</p>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-target="dashboard"><a href="#"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="nav-item" data-target="schedule"><a href="#"><i class="far fa-calendar-alt"></i> Schedule</a></li>
+                    <li class="nav-item" data-target="logs"><a href="#"><i class="fas fa-list-ul"></i> Logs</a></li>
+                    <li class="nav-item" data-target="inventory"><a href="#"><i class="fas fa-boxes"></i> Inventory</a></li>
+                    <li class="nav-item" data-target="settings"><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li style="margin-top: 50px;"><a href="#" id="btn-logout" style="color: #E74C3C;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-title" style="display: flex; align-items: center; gap: 15px;">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+                    <h1 id="page-title">Admin Dashboard</h1>
+                </div>
+                <div class="header-clock" id="live-clock-card">
+                    <div class="clock-label">Live System Clock</div>
+                    <div class="clock-time"><span id="clock-time">--:--:--</span> <span id="clock-ampm">--</span></div>
+                    <div class="clock-date" id="clock-date">Today • --, Week --</div>
+                </div>
+            </header>
+
+            <!-- Page Sections Container -->
+            <div id="pages-container">
+                <!-- Dashboard Section -->
+                <div id="section-dashboard" class="page-section active-section">
+
+            <!-- Status Cards -->
+            <section class="status-cards">
+                <div class="card feed-level-card">
+                    <div class="card-header">Feed Level</div>
+                    <div class="card-body">
+                        <div class="level-value"><span id="feed-percentage">--</span>%</div>
+                        <div class="level-status" id="feed-status-text">Loading...</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="feed-progress-bar" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card last-feeding-card">
+                    <div class="card-header">Last Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="last-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="last-feeding-amount">--</span> g dispensed</div>
+                    </div>
+                </div>
+                <div class="card next-feeding-card">
+                    <div class="card-header">Next Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="next-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="next-feeding-countdown">--h --m</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Section (Schedule & Logs) -->
+            <section class="details-section">
+                <!-- Weekly Schedule -->
+                <div class="card schedule-card">
+                    <div class="card-header border-bottom">
+                        <h3>Weekly Schedule</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="schedule-list" id="schedule-list">
+                            <li><i class="far fa-calendar-check schedule-icon"></i> Loading schedule...</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Recent Logs -->
+                <div class="card logs-card">
+                    <div class="card-header border-bottom d-flex-between">
+                        <h3>Recent Logs</h3>
+                        <button class="btn-add" id="btn-manual-feed"><i class="fas fa-plus"></i> Feed Now</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="logs-list" id="logs-list">
+                            <li>Loading logs...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+                </div> <!-- End Dashboard Section -->
+
+                <!-- Schedule Section -->
+                <div id="section-schedule" class="page-section" style="display: none;">
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div class="card-header border-bottom">
+                            <h3>Add New Feeding Schedule</h3>
+                        </div>
+                        <div class="card-body">
+                            <form id="schedule-form">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Select Days:</label>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <label><input type="checkbox" name="days" value="Mon"> Mon</label>
+                                        <label><input type="checkbox" name="days" value="Tue"> Tue</label>
+                                        <label><input type="checkbox" name="days" value="Wed"> Wed</label>
+                                        <label><input type="checkbox" name="days" value="Thu"> Thu</label>
+                                        <label><input type="checkbox" name="days" value="Fri"> Fri</label>
+                                        <label><input type="checkbox" name="days" value="Sat"> Sat</label>
+                                        <label><input type="checkbox" name="days" value="Sun"> Sun</label>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">How many times to feed (per selected day)?</label>
+                                    <select id="schedule-times-count" style="padding:8px; border:1px solid #ccc; border-radius:4px; width:100%; max-width:200px;">
+                                        <option value="1" selected>1 Time</option>
+                                        <option value="2">2 Times</option>
+                                        <option value="3">3 Times</option>
+                                        <option value="4">4 Times</option>
+                                        <option value="5">5 Times</option>
+                                    </select>
+                                </div>
+                                <div id="dynamic-time-inputs" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                                    <div>
+                                        <label style="display:inline-block; width: 60px;">Time 1:</label>
+                                        <input type="time" class="schedule-time-input" required style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Amount (grams):</label>
+                                    <input type="number" id="schedule-amount" value="250" required style="padding:8px; border:1px solid #ccc; border-radius:4px;">
+                                </div>
+                                <button type="submit" class="btn-add">Save Schedule</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header border-bottom">
+                            <h3>Current Schedules</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <ul class="schedule-list" id="full-schedule-list">
+                                <!-- Will be hydrated by JS -->
+                                <li>Loading schedules...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Section -->
+                <div id="section-logs" class="page-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header border-bottom">
+                            <h3>Full Feeding System Logs</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="logs-list" id="full-logs-list">
+                                <!-- Will be hydrated by JS -->
+                                <li>Loading historical logs...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventory Section -->
+                <div id="section-inventory" class="page-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header border-bottom d-flex-between">
+                            <h3>Stock Inventory</h3>
+                            <button id="btn-mark-refilled" class="btn-add" style="background-color: var(--color-feed-level);"><i class="fas fa-sync"></i> Mark Refilled</button>
+                        </div>
+                        <div class="card-body">
+                            <p>Current Feed Available: <strong id="inv-level">--</strong></p>
+                            <p>Threshold for alert: <strong>20%</strong></p>
+                            <hr style="margin:20px 0; border:none; border-bottom:1px solid #eee;">
+                            <h4>Refill History</h4>
+                            <ul class="logs-list" id="refill-history-list" style="margin-top:10px;">
+                                <li style="color:#888; font-size:14px;">Loading refill history...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="section-settings" class="page-section" style="display: none;">
+                    <div class="card">
+                        <div class="card-header border-bottom"><h3>System Configuration</h3></div>
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 15px;">
+                            <div>
+                                <label style="display:block; font-weight:bold; margin-bottom:5px;">SMS Alerts Phone Number</label>
+                                <input type="text" id="setting-phone" placeholder="Ex: +639123456789" style="padding:10px; width:100%; max-width:300px; border:1px solid #ccc; border-radius:5px;">
+                            </div>
+                            <div>
+                                <label style="font-weight:bold; display:flex; align-items:center; gap:10px;">
+                                    <input type="checkbox" id="setting-sms-enable" checked> Enable SMS Alerts
+                                </label>
+                            </div>
+                            <!-- Servo Timing Configurations -->
+                            <div style="background:var(--color-bg); padding:15px; border-radius:8px; border:1px solid #eee; margin-top:5px;">
+                                <h4 style="margin-top:0; margin-bottom:10px;">Feeder Servo Timing Configuration</h4>
+                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Configure the time the servo opens and closes to dispense the correct amount of feed.</p>
+                                
+                                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Servo Open Time (ms)</label>
+                                        <input type="number" id="setting-servo-open" placeholder="e.g. 500" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+                                    </div>
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Servo Closed Time (ms)</label>
+                                        <input type="number" id="setting-servo-closed" placeholder="e.g. 1000" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btn-save-settings" class="btn-add" style="width:150px; margin-top:10px;">Save Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- End Pages Container -->
+        </main>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
