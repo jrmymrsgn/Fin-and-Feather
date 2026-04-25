@@ -1,13 +1,13 @@
 // Your web app's Firebase configuration
 // REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG
 const firebaseConfig = {
-apiKey: "AIzaSyCXQopu0o9BMSp3Dr62QnR_FLw6dMGryC0",
-  authDomain: "fin-and-feather-feeding-3e5c3.firebaseapp.com",
-  databaseURL: "https://fin-and-feather-feeding-3e5c3-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "fin-and-feather-feeding-3e5c3",
-  storageBucket: "fin-and-feather-feeding-3e5c3.firebasestorage.app",
-  messagingSenderId: "99913608949",
-  appId: "1:99913608949:web:7a9dfe18c68bbbea539fbc"
+    apiKey: "AIzaSyDIMtKQqlR7_R35lkrDWVn1agPnGDaAUiY",
+  authDomain: "helmet-alert-system.firebaseapp.com",
+  databaseURL: "https://helmet-alert-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "helmet-alert-system",
+  storageBucket: "helmet-alert-system.firebasestorage.app",
+  messagingSenderId: "426356613178",
+  appId: "1:426356613178:web:4238d6c44f20331f091503"
 };
 
 // Initialize Firebase

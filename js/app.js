@@ -213,6 +213,7 @@ function initializeRealtimeListeners() {
                 document.getElementById('setting-sms-enable').checked = data.smsEnabled !== false;
                 document.getElementById('setting-servo-open').value = data.servoOpenTime || '';
                 document.getElementById('setting-servo-closed').value = data.servoClosedTime || '';
+                document.getElementById('setting-hopper-height').value = data.hopperHeight || '';
             }
         }
     });
@@ -228,12 +229,18 @@ if(btnSaveSettings) {
         const smsEnabled = document.getElementById('setting-sms-enable').checked;
         const servoOpen = parseInt(document.getElementById('setting-servo-open').value) || 0;
         const servoClosed = parseInt(document.getElementById('setting-servo-closed').value) || 0;
+        const hopperHeight = parseInt(document.getElementById('setting-hopper-height').value) || 0;
+
+        if (hopperHeight > 0 && hopperHeight < 5) {
+            return alert('Hopper height must be at least 5 cm.');
+        }
 
         feederRef.child('settings').update({
             phoneNumber: phone,
             smsEnabled: smsEnabled,
             servoOpenTime: servoOpen,
-            servoClosedTime: servoClosed
+            servoClosedTime: servoClosed,
+            hopperHeight: hopperHeight || null
         }).then(() => {
             alert('Settings saved successfully!');
         }).catch(err => {
@@ -377,10 +384,10 @@ function renderSchedule(data) {
         return;
     }
     
-    // Group by day
+    // Group by day, keeping track of Firebase keys
     const grouped = {};
     for (const key in data) {
-        const item = data[key];
+        const item = { ...data[key], _key: key };
         if(!grouped[item.day]) grouped[item.day] = [];
         grouped[item.day].push(item);
     }
@@ -395,25 +402,103 @@ function renderSchedule(data) {
             // Build horizontally aligned time blocks
             let timesHTML = '';
             grouped[day].forEach(item => {
+                // Dashboard view: simple pill (no buttons)
                 timesHTML += `<span style="background:var(--color-bg); padding:6px 10px; border-radius:6px; font-size:13px; font-weight:500; border:1px solid #e1e4e8; display:inline-flex; align-items:center; gap:5px;">
                     <i class="far fa-clock" style="color:#666;"></i> ${item.time} 
                     <span style="color:#888; font-size:11px;">(${item.amount}g)</span>
                 </span>`;
             });
             
-            const li = `<li style="display:flex; align-items:flex-start; border-bottom:1px solid #eee; padding:15px 20px;">
+            const dashLi = `<li style="display:flex; align-items:flex-start; border-bottom:1px solid #eee; padding:15px 20px;">
                 <div style="display:flex; align-items:center; width:80px; margin-top:6px;">
                     <i class="far fa-calendar-check schedule-icon" style="color:#F39C12; margin-right:10px;"></i>
                     <span class="schedule-day" style="font-weight:bold;">${day}</span>
                 </div>
-                <div class="schedule-times" style="flex:1; display:flex; flex-wrap:wrap; gap:10px;">
-                    ${timesHTML}
-                </div>
+                <div class="schedule-times" style="flex:1; display:flex; flex-wrap:wrap; gap:10px;">${timesHTML}</div>
             </li>`;
+            scheduleListEl.innerHTML += dashLi;
             
-            scheduleListEl.innerHTML += li;
-            if(fullListEl) fullListEl.innerHTML += li;
+            // Full schedule view: pills WITH edit & delete buttons
+            if (fullListEl) {
+                let fullTimesHTML = '';
+                grouped[day].forEach(item => {
+                    fullTimesHTML += `
+                    <span style="background:var(--color-bg); padding:6px 10px; border-radius:6px; font-size:13px; font-weight:500; border:1px solid #e1e4e8; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="far fa-clock" style="color:#666;"></i> ${item.time}
+                        <span style="color:#888; font-size:11px;">(${item.amount}g)</span>
+                        <button onclick="openEditSchedule('${item._key}','${item.day}','${item.rawTime}',${item.amount})" title="Edit"
+                            style="border:none; background:transparent; cursor:pointer; color:#2980B9; padding:0;">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button onclick="deleteScheduleEntry('${item._key}')" title="Delete"
+                            style="border:none; background:transparent; cursor:pointer; color:#E74C3C; padding:0;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>`;
+                });
+                const fullLi = `<li style="display:flex; align-items:flex-start; border-bottom:1px solid #eee; padding:15px 20px;">
+                    <div style="display:flex; align-items:center; width:80px; margin-top:6px;">
+                        <i class="far fa-calendar-check schedule-icon" style="color:#F39C12; margin-right:10px;"></i>
+                        <span class="schedule-day" style="font-weight:bold;">${day}</span>
+                    </div>
+                    <div class="schedule-times" style="flex:1; display:flex; flex-wrap:wrap; gap:10px;">${fullTimesHTML}</div>
+                </li>`;
+                fullListEl.innerHTML += fullLi;
+            }
         }
+    });
+}
+
+// Delete a single schedule entry
+function deleteScheduleEntry(key) {
+    if (!feederRef) return;
+    if (!confirm('Delete this schedule entry?')) return;
+    feederRef.child('schedule/' + key).remove()
+        .then(() => console.log('Schedule entry deleted.'))
+        .catch(err => alert('Error: ' + err.message));
+}
+
+// Open edit modal for a schedule entry
+function openEditSchedule(key, day, rawTime, amount) {
+    document.getElementById('edit-schedule-key').value = key;
+    document.getElementById('edit-schedule-day').value = day;
+    document.getElementById('edit-schedule-time').value = rawTime;
+    document.getElementById('edit-schedule-amount').value = amount;
+    const modal = document.getElementById('edit-schedule-modal');
+    modal.style.display = 'flex';
+}
+
+// Cancel edit modal
+const btnEditScheduleCancel = document.getElementById('btn-edit-schedule-cancel');
+if (btnEditScheduleCancel) {
+    btnEditScheduleCancel.addEventListener('click', () => {
+        document.getElementById('edit-schedule-modal').style.display = 'none';
+    });
+}
+
+// Save edited schedule entry
+const btnEditScheduleSave = document.getElementById('btn-edit-schedule-save');
+if (btnEditScheduleSave) {
+    btnEditScheduleSave.addEventListener('click', () => {
+        if (!feederRef) return alert('Device not connected.');
+        const key = document.getElementById('edit-schedule-key').value;
+        const day = document.getElementById('edit-schedule-day').value;
+        const rawTime = document.getElementById('edit-schedule-time').value;
+        const amount = parseInt(document.getElementById('edit-schedule-amount').value);
+        if (!rawTime) return alert('Please select a time.');
+
+        // Format display time
+        let [h, m] = rawTime.split(':');
+        let ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        const formattedTime = `${h}:${m} ${ampm}`;
+
+        feederRef.child('schedule/' + key).update({
+            day, rawTime, time: formattedTime, amount
+        }).then(() => {
+            document.getElementById('edit-schedule-modal').style.display = 'none';
+            alert('Schedule updated successfully!');
+        }).catch(err => alert('Error: ' + err.message));
     });
 }
 
@@ -500,15 +585,13 @@ function renderLogsGrouped(data) {
         return;
     }
 
-    // Convert to array and group by date
-    const logsArray = Object.keys(data).map(key => data[key]).reverse();
+    // Convert to array keeping Firebase key, group by date
+    const logsArray = Object.keys(data).map(key => ({ ...data[key], _key: key })).reverse();
     const grouped = {};
 
     logsArray.forEach(log => {
-        // Assume log.timestamp represents ms or date string. If not, fallback to log.date or "Unknown Date"
-        const d = new Date(log.timestamp || Date.now()); 
+        const d = new Date(log.timestamp || Date.now());
         const dateString = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
         if(!grouped[dateString]) grouped[dateString] = [];
         grouped[dateString].push(log);
     });
@@ -516,7 +599,7 @@ function renderLogsGrouped(data) {
     let refillCount = 0;
 
     for (let date in grouped) {
-        // Print Header for Day
+        // Date header (only for full log list)
         if(fullLogsEl) fullLogsEl.innerHTML += `<div style="background:#f9f9f9; padding:8px; font-weight:bold; margin-top:10px; color:#555;">${date}</div>`;
         
         grouped[date].forEach(log => {
@@ -525,20 +608,32 @@ function renderLogsGrouped(data) {
             if (log.type === 'error') iconClass = 'fas fa-times-circle error';
             
             const timeStr = log.time || new Date(log.timestamp).toLocaleTimeString();
-            
-            const li = `<li style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:10px;">
-                <i class="${iconClass} log-icon" style="margin-right:15px; color:${log.type==='warning'?'#F39C12':'#2EBA8A'}"></i>
+            const iconColor = log.type === 'warning' ? '#F39C12' : log.type === 'error' ? '#E74C3C' : '#2EBA8A';
+
+            // Full log entry (with delete button)
+            const fullLi = `<li style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:10px;">
+                <i class="${iconClass} log-icon" style="margin-right:15px; color:${iconColor}"></i>
+                <span class="log-time" style="width:100px; font-size:12px; flex-shrink:0;">${timeStr}</span>
+                <span class="log-message" style="flex:1; color:#666;">${log.message}</span>
+                <button onclick="deleteLogEntry('${log._key}')" title="Delete log"
+                    style="border:none; background:transparent; cursor:pointer; color:#E74C3C; font-size:14px; padding:4px 8px; flex-shrink:0;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </li>`;
+
+            // Dashboard entry (no delete button, compact)
+            const dashLi = `<li style="display:flex; align-items:center; border-bottom:1px solid #eee; padding:10px;">
+                <i class="${iconClass} log-icon" style="margin-right:15px; color:${iconColor}"></i>
                 <span class="log-time" style="width:100px; font-size:12px;">${timeStr}</span>
                 <span class="log-message" style="flex:1; color:#666;">${log.message}</span>
             </li>`;
             
-            // Add to both limited dashboard list and full logs list
-            if(logsListEl.children.length < 5) logsListEl.innerHTML += li; 
-            if(fullLogsEl) fullLogsEl.innerHTML += li;
+            if(logsListEl.children.length < 5) logsListEl.innerHTML += dashLi;
+            if(fullLogsEl) fullLogsEl.innerHTML += fullLi;
 
-            // Handle Refill history
+            // Refill history
             if(log.isRefill || log.message.toLowerCase().includes('refill')) {
-                if(refillListEl) refillListEl.innerHTML += li;
+                if(refillListEl) refillListEl.innerHTML += dashLi;
                 refillCount++;
             }
         });
@@ -547,4 +642,25 @@ function renderLogsGrouped(data) {
     if (refillCount === 0 && refillListEl) {
         refillListEl.innerHTML = '<li style="color:#888; font-size:14px;">No recent manual refills logged.</li>';
     }
+}
+
+// Delete a single log entry
+function deleteLogEntry(key) {
+    if (!feederRef) return;
+    if (!confirm('Delete this log entry?')) return;
+    feederRef.child('logs/' + key).remove()
+        .then(() => console.log('Log deleted.'))
+        .catch(err => alert('Error deleting log: ' + err.message));
+}
+
+// Clear All Logs button
+const btnClearAllLogs = document.getElementById('btn-clear-all-logs');
+if (btnClearAllLogs) {
+    btnClearAllLogs.addEventListener('click', () => {
+        if (!feederRef) return alert('Device not connected yet.');
+        if (!confirm('Are you sure you want to DELETE ALL logs? This cannot be undone.')) return;
+        feederRef.child('logs').remove()
+            .then(() => alert('All logs cleared.'))
+            .catch(err => alert('Error clearing logs: ' + err.message));
+    });
 }
