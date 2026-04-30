@@ -1,4 +1,9 @@
-# Fin & Feather Feeding System
+# Fin & Feather Feeding System 
+Members:
+Jeremy M. Rivera
+Aaronjay A. Lusterio
+James Tristan F. Lasac
+Alex Ethan P. Hernandez
 
 An automated, IoT-based web application and hardware ecosystem designed to precisely monitor and control feeding schedules for livestock (such as chickens and fish).
 
