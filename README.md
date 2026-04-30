@@ -21,7 +21,7 @@ The system is split into two robust entities acting in real-time communication:
    * Uses Firebase Realtime Database for logging events, queuing manual feeds, and managing the active schedule.
 
 2. **The Hardware Hub (ESP8266 + Sensors)**
-   * **I2C LCD Display**: Provides a simple real-time display of system status such as feed level, connection status, or alerts using minimal wiring (I2C interface).
+   * **NodeMCU ESP8266 (Main Controller)**: Handles WiFi connectivity, Firebase communication, and overall system logic.
    *  Uses an **Ultrasonic Sensor** affixed inside the feed enclosure/hopper to dynamically measure the distance of the feed. It maps this distance into a 0-100% capacity rating.
    * Utilizes a **Servo Motor (180 degrees)** to reliably execute "dispense" commands by rotating to open a gate mechanism.
    * Integrates a **SIM900A GSM Module**. If the feed level drops below 20%, an automated SMS alert is dispatched to the administrator.
