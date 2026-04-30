@@ -1,5 +1,5 @@
 # Fin & Feather Feeding System 
-Members:
+**Members:**
 Jeremy M. Rivera/
 Aaronjay A. Lusterio/
 James Tristan F. Lasac/
