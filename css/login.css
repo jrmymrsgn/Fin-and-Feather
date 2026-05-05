@@ -23,6 +23,7 @@ body {
     padding: 20px;
     align-items: center;
     justify-content: space-between;
+    color: white;
 }
 
 /* Left side (Branding) */
@@ -30,6 +31,7 @@ body {
     width: 50%;
     padding-right: 40px;
     padding-bottom: 80px;
+    color: white;
 }
 
 .brand-title {
