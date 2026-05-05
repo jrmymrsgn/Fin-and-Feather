@@ -1,5 +1,5 @@
-// Your web app's Firebase configuration
-// REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG
+// Our web app's Firebase configuration
+// REPLACE THIS WITH ACTUAL FIREBASE CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyCXQopu0o9BMSp3Dr62QnR_FLw6dMGryC0",
   authDomain: "fin-and-feather-feeding-3e5c3.firebaseapp.com",
