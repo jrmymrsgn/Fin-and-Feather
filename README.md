@@ -63,5 +63,3 @@ Because this application isolates its backend to Firebase (BaaS) and runs purely
 4. Click **Save**. In ~2 minutes, your admin dashboard will be live on the internet!
 
 ---
-
-*Note on Images*: To display the custom aesthetic background properly, ensure you have saved your imagery inside the `/images` directory named as `bg-image.jpg`.
