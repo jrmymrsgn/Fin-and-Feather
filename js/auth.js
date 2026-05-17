@@ -1,4 +1,3 @@
-console.log("AUTH FILE LOADED");
 
 // =============================
 // AUTH UI ELEMENTS
