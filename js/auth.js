@@ -1,316 +1,219 @@
-// ===============================
-// FIN & FEATHER FEEDING SYSTEM
-// AUTH.JS - FULL UPDATED VERSION
-// ===============================
-
-// ===============================
-// DOM ELEMENTS - FORMS
-// ===============================
+// =============================
+// AUTH UI ELEMENTS
+// =============================
 const loginBox = document.getElementById('login-box');
 const signupBox = document.getElementById('signup-box');
 const forgotBox = document.getElementById('forgot-box');
 
-// ===============================
-// DOM ELEMENTS - BUTTONS/LINKS
-// ===============================
 const showSignupBtn = document.getElementById('show-signup-btn');
 const showForgotLink = document.getElementById('show-forgot-link');
 const showLoginLink1 = document.getElementById('show-login-link-1');
 const showLoginLink2 = document.getElementById('show-login-link-2');
 
-// ===============================
-// FIREBASE AUTH
-// ===============================
-const auth = firebase.auth();
-const database = firebase.database();
-
-// ===============================
-// HIDE ALL BOXES
-// ===============================
-function hideAllBoxes() {
-    loginBox.style.display = 'none';
-    signupBox.style.display = 'none';
-    forgotBox.style.display = 'none';
+// =============================
+// SAFETY CHECK (IMPORTANT)
+// =============================
+if (!loginBox || !signupBox || !forgotBox) {
+    console.error("Auth UI elements not found. Check HTML IDs.");
 }
 
-// ===============================
-// SHOW SIGNUP
-// ===============================
-showSignupBtn.addEventListener('click', (e) => {
-    e.preventDefault();
+// =============================
+// NAVIGATION
+// =============================
+function hideAllBoxes() {
+    if (loginBox) loginBox.style.display = 'none';
+    if (signupBox) signupBox.style.display = 'none';
+    if (forgotBox) forgotBox.style.display = 'none';
+}
 
-    hideAllBoxes();
+if (showSignupBtn) {
+    showSignupBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAllBoxes();
+        signupBox.style.display = 'block';
+    });
+}
 
-    signupBox.style.display = 'block';
-});
+if (showForgotLink) {
+    showForgotLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAllBoxes();
+        forgotBox.style.display = 'block';
+    });
+}
 
-// ===============================
-// SHOW FORGOT PASSWORD
-// ===============================
-showForgotLink.addEventListener('click', (e) => {
-    e.preventDefault();
+if (showLoginLink1) {
+    showLoginLink1.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAllBoxes();
+        loginBox.style.display = 'block';
+    });
+}
 
-    hideAllBoxes();
+if (showLoginLink2) {
+    showLoginLink2.addEventListener('click', (e) => {
+        e.preventDefault();
+        hideAllBoxes();
+        loginBox.style.display = 'block';
+    });
+}
 
-    forgotBox.style.display = 'block';
-});
+// =============================
+// FIREBASE AUTH
+// =============================
+const auth = firebase.auth();
 
-// ===============================
-// SHOW LOGIN
-// ===============================
-showLoginLink1.addEventListener('click', (e) => {
-    e.preventDefault();
+// =============================
+// LOGIN
+// =============================
+const loginForm = document.getElementById('login-form');
 
-    hideAllBoxes();
+if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    loginBox.style.display = 'block';
-});
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
 
-showLoginLink2.addEventListener('click', (e) => {
-    e.preventDefault();
+        console.log("Attempting login:", email);
 
-    hideAllBoxes();
+        try {
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
 
-    loginBox.style.display = 'block';
-});
+            console.log("LOGIN SUCCESS:", userCredential.user.email);
 
-// ===============================
-// FRIENDLY ERROR MESSAGES
-// ===============================
+            alert("Login successful!");
+
+            // small delay ensures Firebase session is set
+            setTimeout(() => {
+                window.location.href = './dashboard.html';
+            }, 500);
+
+        } catch (error) {
+            console.error("LOGIN ERROR:", error.code, error.message);
+            alert(getFriendlyErrorMessage(error));
+        }
+    });
+}
+
+// =============================
+// SIGNUP
+// =============================
+const signupForm = document.getElementById('signup-form');
+
+if (signupForm) {
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value;
+        const deviceId = document.getElementById('signup-device-id').value.trim();
+
+        if (!deviceId) {
+            alert("Device ID is required");
+            return;
+        }
+
+        try {
+            const deviceRef = firebase.database().ref('devices/' + deviceId);
+            const snapshot = await deviceRef.once('value');
+
+            if (snapshot.exists() && snapshot.child('owner').exists()) {
+                alert("Device already assigned.");
+                return;
+            }
+
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const uid = userCredential.user.uid;
+
+            await firebase.database().ref('users/' + uid).set({
+                deviceId: deviceId
+            });
+
+            await deviceRef.child('owner').set(uid);
+
+            alert("Account created!");
+
+            window.location.href = './dashboard.html';
+
+        } catch (error) {
+            console.error(error);
+            alert(getFriendlyErrorMessage(error));
+        }
+    });
+}
+
+// =============================
+// FORGOT PASSWORD
+// =============================
+const forgotForm = document.getElementById('forgot-form');
+
+if (forgotForm) {
+    forgotForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('forgot-email').value.trim();
+
+        try {
+            await auth.sendPasswordResetEmail(email);
+            alert("Reset email sent!");
+            hideAllBoxes();
+            loginBox.style.display = 'block';
+        } catch (error) {
+            alert(getFriendlyErrorMessage(error));
+        }
+    });
+}
+
+// =============================
+// ERROR HANDLER
+// =============================
 function getFriendlyErrorMessage(error) {
+    console.log("Firebase error:", error);
 
     switch (error.code) {
-
-        case 'auth/wrong-password':
-            return 'Incorrect password.';
-
         case 'auth/user-not-found':
-            return 'No account found with this email.';
-
+            return "No account found.";
+        case 'auth/wrong-password':
+            return "Wrong password.";
         case 'auth/invalid-email':
-            return 'Invalid email address.';
-
-        case 'auth/email-already-in-use':
-            return 'Email already registered.';
-
-        case 'auth/weak-password':
-            return 'Password must be at least 6 characters.';
-
+            return "Invalid email.";
         case 'auth/network-request-failed':
-            return 'Please check your internet connection.';
-
-        case 'auth/too-many-requests':
-            return 'Too many attempts. Try again later.';
-
+            return "Network error.";
         default:
             return error.message;
     }
 }
 
-// ===============================
-// LOGIN
-// ===============================
-document.getElementById('login-form')
-.addEventListener('submit', async (e) => {
-
-    e.preventDefault();
-
-    const email =
-        document.getElementById('login-email').value.trim();
-
-    const password =
-        document.getElementById('login-password').value;
-
-    try {
-
-        await auth.signInWithEmailAndPassword(
-            email,
-            password
-        );
-
-        alert('Login successful!');
-
-        window.location.href = 'dashboard.html';
-
-    } catch (error) {
-
-        alert(getFriendlyErrorMessage(error));
-
-    }
-});
-
-// ===============================
-// SIGNUP
-// ===============================
-document.getElementById('signup-form')
-.addEventListener('submit', async (e) => {
-
-    e.preventDefault();
-
-    const deviceId =
-        document.getElementById('signup-device-id')
-        .value
-        .trim();
-
-    const email =
-        document.getElementById('signup-email')
-        .value
-        .trim();
-
-    const password =
-        document.getElementById('signup-password')
-        .value;
-
-    // Validation
-    if (!deviceId) {
-        alert('Please enter Device ID.');
-        return;
-    }
-
-    if (password.length < 6) {
-        alert('Password must be at least 6 characters.');
-        return;
-    }
-
-    try {
-
-        // Check device existence
-        const deviceRef =
-            database.ref('devices/' + deviceId);
-
-        const snapshot =
-            await deviceRef.once('value');
-
-        // Device already owned
-        if (
-            snapshot.exists() &&
-            snapshot.child('owner').exists()
-        ) {
-
-            alert(
-                'This Device ID is already registered.'
-            );
-
-            return;
-        }
-
-        // Create user
-        const userCredential =
-            await auth.createUserWithEmailAndPassword(
-                email,
-                password
-            );
-
-        const uid = userCredential.user.uid;
-
-        // Save user device
-        await database.ref('users/' + uid).set({
-            deviceId: deviceId,
-            email: email,
-            createdAt: Date.now()
-        });
-
-        // Save device owner
-        await deviceRef.update({
-            owner: uid
-        });
-
-        alert('Account created successfully!');
-
-        window.location.href = 'dashboard.html';
-
-    } catch (error) {
-
-        alert(getFriendlyErrorMessage(error));
-
-    }
-});
-
-// ===============================
-// FORGOT PASSWORD
-// ===============================
-document.getElementById('forgot-form')
-.addEventListener('submit', async (e) => {
-
-    e.preventDefault();
-
-    const email =
-        document.getElementById('forgot-email')
-        .value
-        .trim();
-
-    try {
-
-        await auth.sendPasswordResetEmail(email);
-
-        alert(
-            'Password reset email sent successfully!'
-        );
-
-        hideAllBoxes();
-
-        loginBox.style.display = 'block';
-
-    } catch (error) {
-
-        alert(getFriendlyErrorMessage(error));
-
-    }
-});
-
-// ===============================
-// AUTO LOGIN CHECK
-// ===============================
+// =============================
+// AUTO LOGIN REDIRECT
+// =============================
 auth.onAuthStateChanged((user) => {
-
-    if (
-        user &&
-        window.location.pathname.includes('index.html')
-    ) {
-
-        window.location.href = 'dashboard.html';
+    if (user) {
+        console.log("User already logged in:", user.email);
+        if (window.location.pathname.includes('index.html')) {
+            window.location.href = './dashboard.html';
+        }
     }
 });
 
-// ===============================
+// =============================
 // PASSWORD TOGGLE
-// ===============================
-function setupPasswordToggle(
-    toggleIconId,
-    passwordInputId
-) {
+// =============================
+function setupToggle(iconId, inputId) {
+    const icon = document.getElementById(iconId);
+    const input = document.getElementById(inputId);
 
-    const toggleIcon =
-        document.getElementById(toggleIconId);
+    if (!icon || !input) return;
 
-    const passwordInput =
-        document.getElementById(passwordInputId);
+    icon.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
 
-    if (!toggleIcon || !passwordInput) return;
-
-    toggleIcon.addEventListener('click', () => {
-
-        const type =
-            passwordInput.getAttribute('type') === 'password'
-            ? 'text'
-            : 'password';
-
-        passwordInput.setAttribute('type', type);
-
-        toggleIcon.classList.toggle('fa-eye');
-        toggleIcon.classList.toggle('fa-eye-slash');
+        icon.classList.toggle('fa-eye');
+        icon.classList.toggle('fa-eye-slash');
     });
 }
 
-// ===============================
-// INIT PASSWORD TOGGLES
-// ===============================
-setupPasswordToggle(
-    'toggle-login-password',
-    'login-password'
-);
-
-setupPasswordToggle(
-    'toggle-signup-password',
-    'signup-password'
-);
+setupToggle('toggle-login-password', 'login-password');
+setupToggle('toggle-signup-password', 'signup-password');
