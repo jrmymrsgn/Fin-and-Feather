@@ -182,7 +182,6 @@ function renderLogsGrouped(data) {
 
     if (!data) {
         logsListEl.innerHTML = '<li>No logs found.</li>';
-        if (fullLogsEl) fullLogsEl.innerHTML = '<li>No logs found.</li>';
         return;
     }
 
@@ -192,34 +191,30 @@ function renderLogsGrouped(data) {
 
     logsArray.forEach(log => {
 
-        // ✅ SAFE timestamp check (prevents Invalid Date)
-        const timestamp = log.timestamp ? new Date(log.timestamp) : new Date();
+        const date = new Date(log.timestamp);
 
-        // ✅ FULL DATE + YEAR (clean readable format)
-        const timeStr = timestamp.toLocaleString('en-US', {
+        // ✅ FIX: FULL DATE + YEAR RESTORED
+        const timeStr = date.toLocaleString('en-US', {
             year: 'numeric',
-            month: 'long',
+            month: 'short',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit',
-            hour12: true
+            second: '2-digit'
         });
 
         const html = `
             <li>
                 <i class="fas fa-check-circle"></i>
                 <span class="log-time">${timeStr}</span>
-                <span class="log-message">${log.message || 'No message'}</span>
+                <span class="log-message">${log.message}</span>
             </li>
         `;
 
-        // dashboard (limit 5)
         if (logsListEl.children.length < 5) {
             logsListEl.innerHTML += html;
         }
 
-        // full logs page
         if (fullLogsEl) fullLogsEl.innerHTML += html;
     });
 }
