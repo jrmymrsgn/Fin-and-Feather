@@ -573,72 +573,87 @@ function computeNextFeeding(schedules) {
 function renderLogsGrouped(data) {
 
     logsListEl.innerHTML = '';
+    const fullLogsEl = document.getElementById('full-logs-list');
+    const refillListEl = document.getElementById('refill-history-list');
 
-    const fullLogsEl =
-        document.getElementById('full-logs-list');
-
-    const refillListEl =
-        document.getElementById('refill-history-list');
-
-    fullLogsEl.innerHTML = '';
-    refillListEl.innerHTML = '';
+    if (fullLogsEl) fullLogsEl.innerHTML = '';
+    if (refillListEl) refillListEl.innerHTML = '';
 
     if (!data) {
-
-        logsListEl.innerHTML = '<li>No logs found.</li>';
+        logsListEl.innerHTML = '<li>No recent logs.</li>';
+        if (fullLogsEl) fullLogsEl.innerHTML = '<li>No recent logs.</li>';
         return;
     }
 
-    const logsArray =
-        Object.keys(data)
-            .map(key => ({
-                ...data[key],
-                _key: key
-            }))
-            .reverse();
+    // Convert logs to array
+    const logsArray = Object.keys(data)
+        .map(key => ({ ...data[key], _key: key }))
+        .reverse();
+
+    const grouped = {};
 
     logsArray.forEach(log => {
+        const d = new Date(log.timestamp || Date.now());
 
-        const date = new Date(log.timestamp);
-
-        // ✅ FIXED: now includes full date + year + time
-        const timeStr = date.toLocaleString('en-US', {
+        // ✅ FULL DATE WITH YEAR RESTORED
+        const dateString = d.toLocaleDateString('en-US', {
+            weekday: 'long',
             year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+            month: 'long',
+            day: '2-digit'
         });
 
-        const html = `
-            <li>
-                <i class="fas fa-check-circle log-icon completed"></i>
-
-                <span class="log-time">${timeStr}</span>
-
-                <span class="log-message">
-                    ${log.message}
-                </span>
-
-                <button
-                    onclick="deleteLogEntry('${log._key}')"
-                    style="border:none;background:none;color:red;cursor:pointer;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </li>
-        `;
-
-        if (logsListEl.children.length < 5) {
-            logsListEl.innerHTML += html;
-        }
-
-        fullLogsEl.innerHTML += html;
-
-        if (log.isRefill) {
-            refillListEl.innerHTML += html;
-        }
+        if (!grouped[dateString]) grouped[dateString] = [];
+        grouped[dateString].push(log);
     });
+
+    for (let date in grouped) {
+
+        // Header (FULL DATE + YEAR)
+        if (fullLogsEl) {
+            fullLogsEl.innerHTML += `
+                <div style="background:#f4f4f4;padding:8px;margin-top:10px;font-weight:bold;">
+                    ${date}
+                </div>
+            `;
+        }
+
+        grouped[date].forEach(log => {
+
+            const timeStr = new Date(log.timestamp).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            let iconClass = 'fas fa-check-circle';
+            if (log.type === 'warning') iconClass = 'fas fa-exclamation-triangle';
+            if (log.type === 'error') iconClass = 'fas fa-times-circle';
+
+            const html = `
+                <li>
+                    <i class="${iconClass}"></i>
+                    <span class="log-time">${timeStr}</span>
+                    <span class="log-message">${log.message}</span>
+                </li>
+            `;
+
+            // Dashboard (last 5 only)
+            if (logsListEl.children.length < 5) {
+                logsListEl.innerHTML += html;
+            }
+
+            // Full logs
+            if (fullLogsEl) {
+                fullLogsEl.innerHTML += html;
+            }
+
+            // Refill detection (unchanged)
+            if (refillListEl && (log.isRefill || (log.message || '').toLowerCase().includes('refill'))) {
+                refillListEl.innerHTML += html;
+            }
+        });
+    }
 }
 
     // Convert to array keeping Firebase key, group by date
