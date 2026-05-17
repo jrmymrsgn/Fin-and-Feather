@@ -176,24 +176,35 @@ function updateStatusCards(data) {
 function renderLogsGrouped(data) {
 
     logsListEl.innerHTML = '';
-    const fullLogsEl = document.getElementById('full-logs-list');
 
-    if (fullLogsEl) fullLogsEl.innerHTML = '';
+    const fullLogsEl =
+        document.getElementById('full-logs-list');
+
+    const refillListEl =
+        document.getElementById('refill-history-list');
+
+    fullLogsEl.innerHTML = '';
+    refillListEl.innerHTML = '';
 
     if (!data) {
+
         logsListEl.innerHTML = '<li>No logs found.</li>';
         return;
     }
 
-    const logsArray = Object.keys(data)
-        .map(key => ({ ...data[key], _key: key }))
-        .reverse();
+    const logsArray =
+        Object.keys(data)
+            .map(key => ({
+                ...data[key],
+                _key: key
+            }))
+            .reverse();
 
     logsArray.forEach(log => {
 
         const date = new Date(log.timestamp);
 
-        // ✅ FIX: FULL DATE + YEAR RESTORED
+        // ✅ FIXED: now includes full date + year + time
         const timeStr = date.toLocaleString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -205,9 +216,19 @@ function renderLogsGrouped(data) {
 
         const html = `
             <li>
-                <i class="fas fa-check-circle"></i>
+                <i class="fas fa-check-circle log-icon completed"></i>
+
                 <span class="log-time">${timeStr}</span>
-                <span class="log-message">${log.message}</span>
+
+                <span class="log-message">
+                    ${log.message}
+                </span>
+
+                <button
+                    onclick="deleteLogEntry('${log._key}')"
+                    style="border:none;background:none;color:red;cursor:pointer;">
+                    <i class="fas fa-trash"></i>
+                </button>
             </li>
         `;
 
@@ -215,6 +236,10 @@ function renderLogsGrouped(data) {
             logsListEl.innerHTML += html;
         }
 
-        if (fullLogsEl) fullLogsEl.innerHTML += html;
+        fullLogsEl.innerHTML += html;
+
+        if (log.isRefill) {
+            refillListEl.innerHTML += html;
+        }
     });
 }
