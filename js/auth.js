@@ -1,176 +1,316 @@
-// DOM Elements - Forms
+// ===============================
+// FIN & FEATHER FEEDING SYSTEM
+// AUTH.JS - FULL UPDATED VERSION
+// ===============================
+
+// ===============================
+// DOM ELEMENTS - FORMS
+// ===============================
 const loginBox = document.getElementById('login-box');
 const signupBox = document.getElementById('signup-box');
 const forgotBox = document.getElementById('forgot-box');
 
-// DOM Elements - Triggers
+// ===============================
+// DOM ELEMENTS - BUTTONS/LINKS
+// ===============================
 const showSignupBtn = document.getElementById('show-signup-btn');
 const showForgotLink = document.getElementById('show-forgot-link');
 const showLoginLink1 = document.getElementById('show-login-link-1');
 const showLoginLink2 = document.getElementById('show-login-link-2');
 
-// Initialize Firebase Auth
+// ===============================
+// FIREBASE AUTH
+// ===============================
 const auth = firebase.auth();
+const database = firebase.database();
 
-// UI Navigation Functions
+// ===============================
+// HIDE ALL BOXES
+// ===============================
 function hideAllBoxes() {
     loginBox.style.display = 'none';
     signupBox.style.display = 'none';
     forgotBox.style.display = 'none';
 }
 
+// ===============================
+// SHOW SIGNUP
+// ===============================
 showSignupBtn.addEventListener('click', (e) => {
     e.preventDefault();
+
     hideAllBoxes();
+
     signupBox.style.display = 'block';
 });
 
+// ===============================
+// SHOW FORGOT PASSWORD
+// ===============================
 showForgotLink.addEventListener('click', (e) => {
     e.preventDefault();
+
     hideAllBoxes();
+
     forgotBox.style.display = 'block';
 });
 
+// ===============================
+// SHOW LOGIN
+// ===============================
 showLoginLink1.addEventListener('click', (e) => {
     e.preventDefault();
+
     hideAllBoxes();
+
     loginBox.style.display = 'block';
 });
 
 showLoginLink2.addEventListener('click', (e) => {
     e.preventDefault();
+
     hideAllBoxes();
+
     loginBox.style.display = 'block';
 });
 
-// Firebase Authentication Logic
-
-let isAuthAction = false; // Flag to prevent premature redirects during signup/login
-
+// ===============================
+// FRIENDLY ERROR MESSAGES
+// ===============================
 function getFriendlyErrorMessage(error) {
-    if (!error.code) return error.message; // Fallback if no code
 
     switch (error.code) {
+
         case 'auth/wrong-password':
-            return "Incorrect password. Please try again.";
+            return 'Incorrect password.';
+
         case 'auth/user-not-found':
-            return "No account found with this email address.";
-        case 'auth/invalid-login-credentials':
-        case 'auth/invalid-credential':
-            return "Invalid email or password. Please try again.";
+            return 'No account found with this email.';
+
         case 'auth/invalid-email':
-            return "Please enter a valid email address.";
+            return 'Invalid email address.';
+
         case 'auth/email-already-in-use':
-            return "An account with this email already exists.";
+            return 'Email already registered.';
+
         case 'auth/weak-password':
-            return "Your password is too weak. Please use at least 6 characters.";
-        case 'auth/too-many-requests':
-            return "Too many unsuccessful attempts. Please try again later.";
+            return 'Password must be at least 6 characters.';
+
         case 'auth/network-request-failed':
-            return "Network error. Please check your internet connection.";
+            return 'Please check your internet connection.';
+
+        case 'auth/too-many-requests':
+            return 'Too many attempts. Try again later.';
+
         default:
-            return "An error occurred: " + error.message;
+            return error.message;
     }
 }
 
-// 1. Log In
-document.getElementById('login-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    isAuthAction = true;
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+// ===============================
+// LOGIN
+// ===============================
+document.getElementById('login-form')
+.addEventListener('submit', async (e) => {
 
-    auth.signInWithEmailAndPassword(email, password)
-        .then((userCredential) => {
-            console.log("Logged in successfully:", userCredential.user);
-            window.location.href = 'dashboard.html'; 
-        })
-        .catch((error) => {
-            isAuthAction = false;
-            alert(getFriendlyErrorMessage(error));
-        });
+    e.preventDefault();
+
+    const email =
+        document.getElementById('login-email').value.trim();
+
+    const password =
+        document.getElementById('login-password').value;
+
+    try {
+
+        await auth.signInWithEmailAndPassword(
+            email,
+            password
+        );
+
+        alert('Login successful!');
+
+        window.location.href = 'dashboard.html';
+
+    } catch (error) {
+
+        alert(getFriendlyErrorMessage(error));
+
+    }
 });
 
-// 2. Sign Up
-document.getElementById('signup-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    const deviceId = document.getElementById('signup-device-id').value.trim();
+// ===============================
+// SIGNUP
+// ===============================
+document.getElementById('signup-form')
+.addEventListener('submit', async (e) => {
 
-    if(!deviceId) {
-        alert("Please enter a valid Device ID.");
+    e.preventDefault();
+
+    const deviceId =
+        document.getElementById('signup-device-id')
+        .value
+        .trim();
+
+    const email =
+        document.getElementById('signup-email')
+        .value
+        .trim();
+
+    const password =
+        document.getElementById('signup-password')
+        .value;
+
+    // Validation
+    if (!deviceId) {
+        alert('Please enter Device ID.');
         return;
     }
 
-    isAuthAction = true;
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters.');
+        return;
+    }
+
     try {
-        // Check if device is already registered
-        const deviceRef = firebase.database().ref('devices/' + deviceId);
-        const snapshot = await deviceRef.once('value');
-        if(snapshot.exists() && snapshot.child('owner').exists()) {
-            alert("This Device ID is already registered to another user.");
+
+        // Check device existence
+        const deviceRef =
+            database.ref('devices/' + deviceId);
+
+        const snapshot =
+            await deviceRef.once('value');
+
+        // Device already owned
+        if (
+            snapshot.exists() &&
+            snapshot.child('owner').exists()
+        ) {
+
+            alert(
+                'This Device ID is already registered.'
+            );
+
             return;
         }
 
-        // Proceed to create user
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        // Create user
+        const userCredential =
+            await auth.createUserWithEmailAndPassword(
+                email,
+                password
+            );
+
         const uid = userCredential.user.uid;
 
-        // Register device to user
-        await deviceRef.child('owner').set(uid);
-        // Link user to device
-        await firebase.database().ref('users/' + uid).set({ deviceId: deviceId });
+        // Save user device
+        await database.ref('users/' + uid).set({
+            deviceId: deviceId,
+            email: email,
+            createdAt: Date.now()
+        });
 
-        alert("Account created and Device registered successfully!");
-        window.location.href = 'dashboard.html'; 
+        // Save device owner
+        await deviceRef.update({
+            owner: uid
+        });
+
+        alert('Account created successfully!');
+
+        window.location.href = 'dashboard.html';
 
     } catch (error) {
-        isAuthAction = false;
+
         alert(getFriendlyErrorMessage(error));
+
     }
 });
 
-// 3. Forgot Password / Reset
-document.getElementById('forgot-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('forgot-email').value;
+// ===============================
+// FORGOT PASSWORD
+// ===============================
+document.getElementById('forgot-form')
+.addEventListener('submit', async (e) => {
 
-    auth.sendPasswordResetEmail(email)
-        .then(() => {
-            alert("Password reset email sent! Please check your inbox.");
-            hideAllBoxes();
-            loginBox.style.display = 'block';
-        })
-        .catch((error) => {
-            alert(getFriendlyErrorMessage(error));
-        });
+    e.preventDefault();
+
+    const email =
+        document.getElementById('forgot-email')
+        .value
+        .trim();
+
+    try {
+
+        await auth.sendPasswordResetEmail(email);
+
+        alert(
+            'Password reset email sent successfully!'
+        );
+
+        hideAllBoxes();
+
+        loginBox.style.display = 'block';
+
+    } catch (error) {
+
+        alert(getFriendlyErrorMessage(error));
+
+    }
 });
 
-// Check if user is already logged in
+// ===============================
+// AUTO LOGIN CHECK
+// ===============================
 auth.onAuthStateChanged((user) => {
-    // Only redirect automatically if user is logged in, on index.html, and not currently submitting a form
-    if (user && window.location.pathname.includes('index.html') && !isAuthAction) {
+
+    if (
+        user &&
+        window.location.pathname.includes('index.html')
+    ) {
+
         window.location.href = 'dashboard.html';
     }
 });
 
-// Toggle Password Visibility
-function setupPasswordToggle(toggleIconId, passwordInputId) {
-    const toggleIcon = document.getElementById(toggleIconId);
-    const passwordInput = document.getElementById(passwordInputId);
-    
-    if (toggleIcon && passwordInput) {
-        toggleIcon.addEventListener('click', function () {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            // Toggle icon
-            this.classList.toggle('fa-eye');
-            this.classList.toggle('fa-eye-slash');
-        });
-    }
+// ===============================
+// PASSWORD TOGGLE
+// ===============================
+function setupPasswordToggle(
+    toggleIconId,
+    passwordInputId
+) {
+
+    const toggleIcon =
+        document.getElementById(toggleIconId);
+
+    const passwordInput =
+        document.getElementById(passwordInputId);
+
+    if (!toggleIcon || !passwordInput) return;
+
+    toggleIcon.addEventListener('click', () => {
+
+        const type =
+            passwordInput.getAttribute('type') === 'password'
+            ? 'text'
+            : 'password';
+
+        passwordInput.setAttribute('type', type);
+
+        toggleIcon.classList.toggle('fa-eye');
+        toggleIcon.classList.toggle('fa-eye-slash');
+    });
 }
 
-setupPasswordToggle('toggle-login-password', 'login-password');
-setupPasswordToggle('toggle-signup-password', 'signup-password');
+// ===============================
+// INIT PASSWORD TOGGLES
+// ===============================
+setupPasswordToggle(
+    'toggle-login-password',
+    'login-password'
+);
+
+setupPasswordToggle(
+    'toggle-signup-password',
+    'signup-password'
+);
