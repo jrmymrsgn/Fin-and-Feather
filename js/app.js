@@ -252,7 +252,19 @@ if(btnSaveSettings) {
 // Feed Now Button
 btnFeedNow.addEventListener('click', () => {
     if (!feederRef) return;
-    feederRef.child('control').update({ dispense_now: true, trigger_time: Date.now() });
+
+    feederRef.child('control').update({
+        dispense_now: true,
+        trigger_time: Date.now()
+    });
+
+    // ✅ THIS WILL SHOW IN LOGS
+    feederRef.child('logs').push({
+        message: "Manual feed triggered",
+        type: "success",
+        timestamp: Date.now()
+    });
+
     alert('Dispense command sent to device!');
 });
 
