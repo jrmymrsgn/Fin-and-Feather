@@ -59,7 +59,6 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-
 // SPA Navigation Logic
 const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
 const pageSections = document.querySelectorAll('.page-section');
@@ -97,8 +96,7 @@ navItems.forEach(item => {
     });
 });
 
-
-// Mobile Sidebar Logic
+// Mobile Sidebar
 const mobileMenuBtn = document.getElementById('mobile-menu-btn');
 const sidebar = document.querySelector('.sidebar');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -108,9 +106,8 @@ function toggleSidebar() {
     sidebarOverlay.classList.toggle('show');
 }
 
-mobileMenuBtn?.addEventListener('click', toggleSidebar);
-sidebarOverlay?.addEventListener('click', toggleSidebar);
-
+mobileMenuBtn.addEventListener('click', toggleSidebar);
+sidebarOverlay.addEventListener('click', toggleSidebar);
 
 // Firebase
 const auth = firebase.auth();
@@ -134,7 +131,6 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-
 // LISTENERS
 function initializeRealtimeListeners() {
 
@@ -151,10 +147,9 @@ function initializeRealtimeListeners() {
         .orderByChild('timestamp')
         .limitToLast(50)
         .on('value', (snapshot) => {
-            renderLogs(snapshot.val());
+            renderLogsGrouped(snapshot.val());
         });
 }
-
 
 // STATUS
 function updateStatusCards(data) {
@@ -175,11 +170,10 @@ function updateStatusCards(data) {
         : "--";
 }
 
-
 /* ===========================
-   FIXED FLAT LOG SYSTEM (NO DATES)
+   🔥 FIXED LOG FUNCTION
    =========================== */
-function renderLogs(data) {
+function renderLogsGrouped(data) {
 
     logsListEl.innerHTML = '';
     const fullLogsEl = document.getElementById('full-logs-list');
@@ -197,9 +191,13 @@ function renderLogs(data) {
 
     logsArray.forEach(log => {
 
-        const date = new Date(log.timestamp || Date.now());
+        const date = new Date(log.timestamp);
 
-        const timeStr = date.toLocaleTimeString('en-US', {
+        // ✅ FIX: FULL DATE + YEAR RESTORED
+        const timeStr = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit'
@@ -207,7 +205,7 @@ function renderLogs(data) {
 
         const html = `
             <li>
-                <i class="fas fa-circle"></i>
+                <i class="fas fa-check-circle"></i>
                 <span class="log-time">${timeStr}</span>
                 <span class="log-message">${log.message}</span>
             </li>
@@ -220,25 +218,3 @@ function renderLogs(data) {
         if (fullLogsEl) fullLogsEl.innerHTML += html;
     });
 }
-
-
-// ===========================
-// 🔥 MANUAL FEED FIX (LOG ADDED)
-// ===========================
-btnFeedNow.addEventListener('click', () => {
-    if (!feederRef) return;
-
-    feederRef.child('control').update({
-        dispense_now: true,
-        trigger_time: Date.now()
-    });
-
-    // ✅ THIS FIX ADDS LOG ENTRY
-    feederRef.child('logs').push({
-        message: "Manual feed triggered",
-        type: "success",
-        timestamp: Date.now()
-    });
-
-    alert('Dispense command sent!');
-});
