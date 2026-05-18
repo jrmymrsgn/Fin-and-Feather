@@ -7,7 +7,7 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background:
-        linear-gradient(rgba(8, 15, 25, 0.65), rgba(8, 15, 25, 0.65)),
+        linear-gradient(rgba(8, 15, 25, 0.72), rgba(8, 15, 25, 0.72)),
         url('../images/bg-image.jpg') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
@@ -181,6 +181,7 @@ body::before {
 }
 
 /* PASSWORD */
+
 .password-container {
     position: relative;
     margin-bottom: 18px;
@@ -205,7 +206,7 @@ body::before {
     color: #ffffff;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 
 .btn-login,
 .btn-signup {
@@ -224,6 +225,13 @@ body::before {
     box-shadow: 0 8px 20px rgba(46,186,138,0.28);
 }
 
+.btn-login:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(46,186,138,0.35);
+}
+
+/* CREATE ACCOUNT BUTTON CENTER FIX */
+
 .create-account {
     width: 100%;
     display: flex;
@@ -232,15 +240,14 @@ body::before {
 }
 
 .create-account .btn-signup {
-    width: auto;
-    min-width: 230px;
+    width: 100%;
+    max-width: 240px;
+    margin: 0 auto;
+    display: block;
     text-align: center;
 }
 
-.btn-login:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(46,186,138,0.35);
-}
+/* SIGNUP BUTTON */
 
 .btn-signup {
     background: rgba(255,255,255,0.1);
@@ -250,10 +257,12 @@ body::before {
 
 .btn-signup:hover {
     background: rgba(255,255,255,0.16);
+    transform: translateY(-2px);
 }
 
 .btn-wide {
     width: 100%;
+    max-width: 100% !important;
 }
 
 .btn-cancel {
@@ -270,7 +279,7 @@ body::before {
     background: rgba(255,255,255,0.14);
 }
 
-/* LINKS */
+/* ================= LINKS ================= */
 
 .forgot-password {
     margin-top: 14px;
@@ -289,7 +298,7 @@ body::before {
     text-decoration: underline;
 }
 
-/* DIVIDER */
+/* ================= DIVIDER ================= */
 
 .divider {
     display: flex;
@@ -315,7 +324,7 @@ body::before {
     margin-left: 12px;
 }
 
-/* BOX HEADER */
+/* ================= BOX HEADER ================= */
 
 .box-header {
     margin-bottom: 20px;
@@ -338,7 +347,7 @@ body::before {
     margin-top: 14px;
 }
 
-/* TERMS */
+/* ================= TERMS ================= */
 
 .terms-text {
     font-size: 12px;
@@ -347,7 +356,7 @@ body::before {
     margin-bottom: 18px;
 }
 
-/* ACTION BUTTONS */
+/* ================= ACTION BUTTONS ================= */
 
 .action-buttons {
     display: flex;
@@ -356,7 +365,7 @@ body::before {
     margin-top: 12px;
 }
 
-/* ANIMATIONS */
+/* ================= ANIMATIONS ================= */
 
 .fade-in {
     animation: fadeIn 0.4s ease;
@@ -460,5 +469,9 @@ body::before {
     .btn-login,
     .btn-signup {
         font-size: 15px;
+    }
+
+    .create-account .btn-signup {
+        max-width: 100%;
     }
 }
