@@ -15,6 +15,9 @@ const nextFeedingCountdownEl = document.getElementById('next-feeding-countdown')
 const scheduleListEl = document.getElementById('schedule-list');
 const logsListEl = document.getElementById('logs-list');
 const btnFeedNow = document.getElementById('btn-manual-feed');
+const totalFeedDispensedEl = document.getElementById('total-feed-dispensed');
+
+let feedChart = null;
 
 // Live Clock Function
 function updateClock() {
@@ -77,6 +80,7 @@ const sectionTitles = {
     'schedule': 'Schedule Management',
     'logs': 'System Logs',
     'inventory': 'Inventory',
+    'analysis': 'Feed Analysis',
     'settings': 'Settings'
 };
 
@@ -202,6 +206,7 @@ function initializeRealtimeListeners() {
     feederRef.child('logs').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
         const data = snapshot.val();
         renderLogsGrouped(data);
+        renderFeedAnalysis(data);
     });
 
     // Settings
@@ -584,6 +589,85 @@ function renderLogsGrouped(data) {
         if(refillListEl) refillListEl.innerHTML = '<li style="color:#888; font-size:14px;">No recent manual refills logged.</li>';
         return;
     }
+
+    function renderFeedAnalysis(data) {
+
+    const ctx = document.getElementById('feedChart');
+
+    if (!ctx) return;
+
+    if (!data) {
+
+        if (feedChart) {
+            feedChart.destroy();
+        }
+
+        return;
+    }
+
+    const logsArray = Object.values(data);
+
+    const groupedByDate = {};
+
+    let totalFeed = 0;
+
+    logsArray.forEach(log => {
+
+        if (!log.timestamp) return;
+
+        const message = (log.message || '').toLowerCase();
+
+        // detect feed logs
+        if (
+            message.includes('dispensed') ||
+            message.includes('feed')
+        ) {
+
+            const date = new Date(log.timestamp)
+                .toLocaleDateString();
+
+            let amount = 0;
+
+            const match = log.message.match(/(\d+)/);
+
+            if (match) {
+                amount = parseInt(match[1]);
+            }
+
+            groupedByDate[date] =
+                (groupedByDate[date] || 0) + amount;
+
+            totalFeed += amount;
+        }
+    });
+
+    const labels = Object.keys(groupedByDate);
+
+    const values = Object.values(groupedByDate);
+
+    totalFeedDispensedEl.textContent = totalFeed;
+
+    if (feedChart) {
+        feedChart.destroy();
+    }
+
+    feedChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Feed Dispensed (grams)',
+                data: values,
+                borderWidth: 2,
+                borderRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
 
     // Convert to array keeping Firebase key, group by date
     const logsArray = Object.keys(data).map(key => ({ ...data[key], _key: key })).reverse();
