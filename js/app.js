@@ -161,30 +161,17 @@ auth.onAuthStateChanged(async (user) => {
         initializeRealtimeListeners();
     } else {
         // Attempt recovery if device is missing
-        let manualDevice = prompt("No device linked! This sometimes happens due to an interrupted signup. Please enter your Device ID to link it now:");
-        if (manualDevice) {
-            manualDevice = manualDevice.trim();
-            try {
-                const devRef = firebase.database().ref('devices/' + manualDevice);
-                const devSnap = await devRef.once('value');
-                if (devSnap.exists()) {
-                    if (devSnap.child('owner').exists() && devSnap.child('owner').val() !== user.uid) {
-                        alert("This Device ID is already registered to another user.");
-                    } else {
-                        await firebase.database().ref('users/' + user.uid).set({ deviceId: manualDevice });
-                        await devRef.child('owner').set(user.uid);
-                        alert("Device linked successfully!");
-                        window.location.reload();
-                    }
-                } else {
-                    alert("Device ID not found in database.");
-                }
+        alert("No device linked to this account.");
+window.location.href = "index.html";
+return;    
             } catch (err) {
                 alert("Error linking device: " + err.message);
             }
-        } else {
-            alert("No device linked to this account!");
-        }
+       } else {
+    alert("No device linked to this account.");
+    auth.signOut();
+    window.location.href = "index.html";
+}
     }
 });
 
