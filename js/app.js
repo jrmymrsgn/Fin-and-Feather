@@ -190,10 +190,31 @@ function initializeRealtimeListeners() {
     });
 
     // Logs (grouped by day)
-    feederRef.child('logs').orderByChild('timestamp').limitToLast(50).on('value', (snapshot) => {
+   feederRef.child('logs')
+    .orderByChild('timestamp')
+    .limitToLast(50)
+    .on('value', (snapshot) => {
+
         const data = snapshot.val();
-        renderLogsGrouped(data);
-        renderFeedAnalysis(data);
+        console.log("Logs:", data);
+
+        // STOP LOADER SAFETY (IMPORTANT)
+        const loader = document.getElementById("loader");
+        if (loader) loader.style.display = "none";
+
+        if (!data) {
+            console.log("No logs found");
+            renderLogsGrouped({});
+            renderFeedAnalysis({});
+            return;
+        }
+
+        try {
+            renderLogsGrouped(data);
+            renderFeedAnalysis(data);
+        } catch (err) {
+            console.error("Render error:", err);
+        }
     });
 
     // Settings
