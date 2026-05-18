@@ -747,3 +747,9 @@ if (btnClearAllLogs) {
             .catch(err => alert('Error clearing logs: ' + err.message));
     });
 }
+function extractGrams(message) {
+    if (!message) return 0;
+
+    const match = message.match(/\((\d+)\s*g\)/i);
+    return match ? parseInt(match[1]) : 0;
+}
