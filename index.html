@@ -1,74 +1,92 @@
 <!DOCTYPE html>
-                        id="signup-password"
-                        placeholder="Create Password"
-                        required
-                    >
-
-                    <i class="fas fa-eye-slash toggle-password" id="toggle-signup-password"></i>
-                </div>
-
-                <p class="terms-text">
-                    By signing up, the device ID entered will be connected permanently to your account.
-                </p>
-
-                <button type="submit" class="btn-signup btn-wide">
-                    Sign Up
-                </button>
-
-                <div class="back-to-login" style="margin-top:15px; text-align:center;">
-                    <a href="#" id="show-login-link-1">
-                        Already have an account?
-                    </a>
-                </div>
-
-            </form>
-
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fin & Feather Feeding System - Log In or Sign Up</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Branding Side -->
+        <div class="brand-section">
+            <h1 class="brand-title">Fin & Feather</h1>
+            <p class="brand-subtitle">Automate your farm's feeding system with precision, keeping your livestock healthy and connected.</p>
         </div>
 
-        <!-- FORGOT PASSWORD -->
-        <div class="auth-box fade-in" id="forgot-box" style="display:none;">
-
-            <div class="box-header">
-                <h2>Reset Password</h2>
-                <p>Enter your email address.</p>
-                <hr>
+        <!-- Right Form Side -->
+        <div class="form-section">
+            <!-- Login Form -->
+            <div class="auth-box" id="login-box">
+                <form id="login-form">
+                    <input type="email" id="login-email" placeholder="Email address" required>
+                    <div class="password-container">
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <i class="fas fa-eye-slash toggle-password" id="toggle-login-password"></i>
+                    </div>
+                    <button type="submit" class="btn-login">Log In</button>
+                </form>
+                <div class="forgot-password">
+                    <a href="#" id="show-forgot-link">Forgotten password?</a>
+                </div>
+                <div class="divider"></div>
+                <div class="create-account">
+                    <button type="button" class="btn-signup" id="show-signup-btn">Create new account</button>
+                </div>
             </div>
 
-            <form id="forgot-form">
-
-                <input
-                    type="email"
-                    id="forgot-email"
-                    placeholder="Email Address"
-                    required
-                >
-
-                <div class="action-buttons">
-                    <button type="button" class="btn-cancel" id="show-login-link-2">
-                        Cancel
-                    </button>
-
-                    <button type="submit" class="btn-login">
-                        Send Email
-                    </button>
+            <!-- Sign Up Form (Initially Hidden) -->
+            <div class="auth-box fade-in" id="signup-box" style="display: none;">
+                <div class="box-header">
+                    <h2>Sign Up</h2>
+                    <p>It's quick and easy.</p>
+                    <hr>
                 </div>
+                <form id="signup-form">
+                    <input type="text" id="signup-device-id" placeholder="Device ID (from your Hardware Guide)" required>
+                    <input type="email" id="signup-email" placeholder="Email address" required>
+                    <div class="password-container">
+                        <input type="password" id="signup-password" placeholder="New password" required>
+                        <i class="fas fa-eye-slash toggle-password" id="toggle-signup-password"></i>
+                    </div>
+                    <p class="terms-text">By clicking Sign Up, you agree to our Terms and Data Policy. The specified Device ID will be permanently tied to your account.</p>
+                    <button type="submit" class="btn-signup btn-wide">Sign Up</button>
+                    <div class="back-to-login">
+                        <a href="#" id="show-login-link-1">Already have an account?</a>
+                    </div>
+                </form>
+            </div>
 
-            </form>
-
+            <!-- Forgot Password Form (Initially Hidden) -->
+            <div class="auth-box fade-in" id="forgot-box" style="display: none;">
+                <div class="box-header">
+                    <h2>Find Your Account</h2>
+                    <p>Please enter your email address to search for your account.</p>
+                    <hr>
+                </div>
+                <form id="forgot-form">
+                    <input type="email" id="forgot-email" placeholder="Email address" required>
+                    <div class="action-buttons">
+                        <button type="button" class="btn-cancel" id="show-login-link-2">Cancel</button>
+                        <button type="submit" class="btn-login">Search</button>
+                    </div>
+                </form>
+            </div>
         </div>
-
     </div>
 
-</div>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-<!-- CUSTOM -->
-<script src="js/firebase-config.js"></script>
-<script src="js/auth.js"></script>
-
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
