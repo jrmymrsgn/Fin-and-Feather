@@ -224,6 +224,19 @@ body::before {
     box-shadow: 0 8px 20px rgba(46,186,138,0.28);
 }
 
+.create-account {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.create-account .btn-signup {
+    width: auto;
+    min-width: 230px;
+    text-align: center;
+}
+
 .btn-login:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 28px rgba(46,186,138,0.35);
