@@ -190,32 +190,23 @@ function initializeRealtimeListeners() {
     });
 
     // Logs (grouped by day)
-   feederRef.child('logs')
-    .orderByChild('timestamp')
-    .limitToLast(50)
-    .on('value', (snapshot) => {
+  feederRef.child('logs')
+  .orderByChild('timestamp')
+  .limitToLast(50)
+  .on('value', (snapshot) => {
 
-        const data = snapshot.val();
-        console.log("Logs:", data);
+    const data = snapshot.val();
 
-        // STOP LOADER SAFETY (IMPORTANT)
-        const loader = document.getElementById("loader");
-        if (loader) loader.style.display = "none";
+    // FIX: prevent dashboard freeze
+    if (!data) {
+        renderLogsGrouped({});
+        renderFeedAnalysis({});
+        return;
+    }
 
-        if (!data) {
-            console.log("No logs found");
-            renderLogsGrouped({});
-            renderFeedAnalysis({});
-            return;
-        }
-
-        try {
-            renderLogsGrouped(data);
-            renderFeedAnalysis(data);
-        } catch (err) {
-            console.error("Render error:", err);
-        }
-    });
+    renderLogsGrouped(data);
+    renderFeedAnalysis(data);
+});
 
     // Settings
     feederRef.child('settings').on('value', (snapshot) => {
