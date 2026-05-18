@@ -90,12 +90,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.log("LOGIN SUCCESS:", result.user.email);
 
-                alert("Login successful!");
+               
 
-                setTimeout(() => {
-                    window.location.href = "./dashboard.html";
-                }, 300);
-
+            window.location.href = "./dashboard.html";
+                
             } catch (error) {
                 console.error("LOGIN ERROR:", error.code, error.message);
                 alert(error.message);
