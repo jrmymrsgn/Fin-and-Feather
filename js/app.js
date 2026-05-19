@@ -730,23 +730,17 @@ function getWeekKey(date) {
     return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
+
+let feedChartInstance = null;
+
 function renderAnalytics(logsArray) {
-    const container = document.getElementById('analytics-container');
-    if (!container) return;
 
-    if (!logsArray || logsArray.length === 0) {
-        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px 0;">No log data available yet.</p>';
-        return;
-    }
+    const byDay  = {};
+    const byWeek = {};
 
-    // ── Identify dispense logs & aggregate ────────
-    // A "dispense" log is any log that contains a gram value
-    const byDay  = {};  // { "YYYY-MM-DD": { count, grams } }
-    const byWeek = {};  // { "YYYY-Www":   { count, grams } }
-
-    logsArray.forEach(log => {
+    (logsArray || []).forEach(function(log) {
         const grams = extractGrams(log.message);
-        if (grams <= 0) return;                       // skip non-dispense logs
+        if (grams <= 0) return;
 
         const d       = new Date(log.timestamp);
         const dayKey  = d.toISOString().slice(0, 10);
@@ -756,119 +750,141 @@ function renderAnalytics(logsArray) {
         if (!byWeek[weekKey]) byWeek[weekKey] = { count: 0, grams: 0 };
 
         byDay[dayKey].count++;
-        byDay[dayKey].grams  += grams;
+        byDay[dayKey].grams   += grams;
         byWeek[weekKey].count++;
         byWeek[weekKey].grams += grams;
     });
 
-    const dayEntries  = Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0]));
-    const weekEntries = Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0]));
+    const dayEntries  = Object.entries(byDay).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+    const weekEntries = Object.entries(byWeek).sort(function(a,b){ return b[0].localeCompare(a[0]); });
 
-    if (dayEntries.length === 0) {
-        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px 0;">No dispense logs found yet. Feed counts appear here automatically when the feeder dispenses.</p>';
-        return;
+    const todayKey    = new Date().toISOString().slice(0, 10);
+    const thisWeekKey = getWeekKey(new Date());
+
+    const todayCount  = (byDay[todayKey]    || {}).count || 0;
+    const todayGrams  = (byDay[todayKey]    || {}).grams || 0;
+    const weekCount   = (byWeek[thisWeekKey]|| {}).count || 0;
+    const weekGrams   = (byWeek[thisWeekKey]|| {}).grams || 0;
+    const totalCount  = dayEntries.reduce(function(s,e){ return s + e[1].count; }, 0);
+    const totalGrams  = dayEntries.reduce(function(s,e){ return s + e[1].grams; }, 0);
+
+    function fmt(g) { return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; }
+    function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+    setEl("an-today-count",      todayCount);
+    setEl("an-today-grams",      fmt(todayGrams));
+    setEl("an-week-count",       weekCount);
+    setEl("an-week-grams",       fmt(weekGrams));
+    setEl("an-total-count",      totalCount);
+    setEl("total-feed-dispensed", fmt(totalGrams));
+
+    var weekTableBody = document.getElementById("an-week-table-body");
+    if (weekTableBody) {
+        if (weekEntries.length === 0) {
+            weekTableBody.innerHTML = "<tr><td colspan=\"3\" style=\"color:#aaa;font-size:13px;padding:12px;\">No data yet.</td></tr>";
+        } else {
+            weekTableBody.innerHTML = weekEntries.slice(0, 8).map(function(entry) {
+                var key = entry[0]; var v = entry[1];
+                var parts  = key.split("-W");
+                var yr = parts[0]; var wk = parts[1];
+                var isThis = (key === thisWeekKey);
+                var rowStyle = isThis ? "background:#f0faf6;font-weight:600;" : "";
+                var badge = isThis ? " <span style=\"color:#2EBA8A;font-size:11px;\">(this week)</span>" : "";
+                return "<tr style=\"" + rowStyle + "\">" +
+                    "<td style=\"padding:10px 14px;color:#555;\">Week " + wk + ", " + yr + badge + "</td>" +
+                    "<td style=\"padding:10px 14px;text-align:center;color:#2EBA8A;font-weight:700;font-size:16px;\">" + v.count + "</td>" +
+                    "<td style=\"padding:10px 14px;text-align:center;color:#888;font-size:13px;\">" + fmt(v.grams) + "</td>" +
+                    "</tr>";
+            }).join("");
+        }
     }
 
-    // ── Summary totals ─────────────────────────────
-    const todayKey        = new Date().toISOString().slice(0, 10);
-    const thisWeekKey     = getWeekKey(new Date());
+    var canvas = document.getElementById("feedChart");
+    if (!canvas) return;
 
-    const todayCount      = byDay[todayKey]?.count      || 0;
-    const todayGrams      = byDay[todayKey]?.grams      || 0;
-    const thisWeekCount   = byWeek[thisWeekKey]?.count  || 0;
-    const thisWeekGrams   = byWeek[thisWeekKey]?.grams  || 0;
-    const totalCount      = dayEntries.reduce((s, [, v]) => s + v.count, 0);
-    const totalGrams      = dayEntries.reduce((s, [, v]) => s + v.grams, 0);
-    const avgCountPerDay  = (totalCount / dayEntries.length).toFixed(1);
-    const avgGramsPerDay  = (totalGrams / dayEntries.length).toFixed(1);
+    var chartEntries = dayEntries.slice(-14);
+    var labels = chartEntries.map(function(e) {
+        var key = e[0];
+        if (key === todayKey) return "Today";
+        var d = new Date(key + "T00:00:00");
+        return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    });
+    var countData = chartEntries.map(function(e){ return e[1].count; });
+    var gramsData = chartEntries.map(function(e){ return e[1].grams; });
+    var barColors = chartEntries.map(function(e){
+        return e[0] === todayKey ? "#2EBA8A" : "rgba(52,152,219,0.75)";
+    });
 
-    const maxDayCount  = Math.max(...dayEntries.map(([, v]) => v.count), 1);
-    const maxWeekCount = Math.max(...weekEntries.map(([, v]) => v.count), 1);
+    if (feedChartInstance) feedChartInstance.destroy();
 
-    // ── Helpers ────────────────────────────────────
-    function fmtG(g)  { return g % 1 === 0 ? g + 'g' : g.toFixed(1) + 'g'; }
-
-    function fmtDayLabel(isoKey) {
-        const d = new Date(isoKey + 'T00:00:00');
-        const s = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-        return isoKey === todayKey
-            ? `<strong style="color:#2EBA8A;">Today</strong> <span style="color:#bbb;font-size:11px;">${s}</span>`
-            : `<span style="color:#555;">${s}</span>`;
-    }
-
-    function statCard(icon, label, mainVal, sub, color) {
-        return `
-        <div style="flex:1;min-width:130px;background:#fff;border:1px solid #e8e8e8;
-            border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-            <div style="font-size:13px;color:#aaa;margin-bottom:6px;">
-                <i class="${icon}" style="color:${color};margin-right:5px;"></i>${label}
-            </div>
-            <div style="font-size:26px;font-weight:700;color:${color};line-height:1.1;">${mainVal}</div>
-            <div style="font-size:11px;color:#bbb;margin-top:4px;">${sub}</div>
-        </div>`;
-    }
-
-    function barRow(labelHTML, count, grams, max, accent) {
-        const pct = Math.round((count / max) * 100);
-        return `
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-            <div style="width:140px;font-size:12px;flex-shrink:0;text-align:right;line-height:1.4;">
-                ${labelHTML}
-            </div>
-            <div style="flex:1;background:#f3f3f3;border-radius:6px;height:24px;overflow:hidden;position:relative;">
-                <div style="width:${pct}%;height:100%;background:${accent};border-radius:6px;
-                    transition:width .5s ease;min-width:${count > 0 ? 4 : 0}px;"></div>
-            </div>
-            <div style="width:90px;font-size:12px;font-weight:600;color:#333;flex-shrink:0;line-height:1.4;">
-                <span style="color:${accent};font-size:15px;">${count}</span>
-                <span style="color:#aaa;font-size:10px;font-weight:400;"> feed${count !== 1 ? 's' : ''}</span><br>
-                <span style="color:#bbb;font-size:10px;">${fmtG(grams)}</span>
-            </div>
-        </div>`;
-    }
-
-    // ── Render ─────────────────────────────────────
-    container.innerHTML = `
-
-        <!-- 4 stat cards -->
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
-            ${statCard('fas fa-sun',        'Today',        todayCount    + ' feeds', fmtG(todayGrams)    + ' dispensed',                    '#2EBA8A')}
-            ${statCard('fas fa-calendar-week','This Week',  thisWeekCount + ' feeds', fmtG(thisWeekGrams) + ' dispensed',                    '#3498DB')}
-            ${statCard('fas fa-chart-line',  'Avg / Day',   avgCountPerDay + ' feeds','~' + fmtG(+avgGramsPerDay) + ' per day',              '#9B59B6')}
-            ${statCard('fas fa-history',     'All Time',    totalCount    + ' feeds', fmtG(totalGrams)    + ' total · ' + dayEntries.length + 'd', '#F39C12')}
-        </div>
-
-        <!-- Daily feed count chart -->
-        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;
-            padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
-                <span>
-                    <i class="fas fa-calendar-day" style="color:#2EBA8A;margin-right:8px;"></i>
-                    Feeds Dispensed — Daily
-                </span>
-                <span style="font-size:11px;font-weight:400;color:#bbb;">last ${Math.min(dayEntries.length, 14)} days</span>
-            </div>
-            ${dayEntries.slice(0, 14).map(([key, v]) =>
-                barRow(fmtDayLabel(key), v.count, v.grams, maxDayCount, '#2EBA8A')
-            ).join('')}
-        </div>
-
-        <!-- Weekly feed count chart -->
-        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;
-            padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
-            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
-                <span>
-                    <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:8px;"></i>
-                    Feeds Dispensed — Weekly
-                </span>
-                <span style="font-size:11px;font-weight:400;color:#bbb;">last ${Math.min(weekEntries.length, 8)} weeks</span>
-            </div>
-            ${weekEntries.slice(0, 8).map(([key, v]) => {
-                const [yr, wk] = key.split('-W');
-                return barRow(
-                    `<span style="color:#555;">Week ${wk}</span> <span style="color:#bbb;font-size:11px;">${yr}</span>`,
-                    v.count, v.grams, maxWeekCount, '#3498DB'
-                );
-            }).join('')}
-        </div>`;
+    feedChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Feeds Dispensed",
+                    data: countData,
+                    backgroundColor: barColors,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    yAxisID: "yCount",
+                    order: 1
+                },
+                {
+                    label: "Grams Dispensed",
+                    data: gramsData,
+                    type: "line",
+                    borderColor: "#F39C12",
+                    backgroundColor: "rgba(243,156,18,0.08)",
+                    borderWidth: 2,
+                    pointBackgroundColor: "#F39C12",
+                    pointRadius: 4,
+                    tension: 0.3,
+                    fill: true,
+                    yAxisID: "yGrams",
+                    order: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: { position: "top", labels: { usePointStyle: true, padding: 18, font: { size: 12 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            if (ctx.dataset.label === "Feeds Dispensed")
+                                return " " + ctx.parsed.y + " feed" + (ctx.parsed.y !== 1 ? "s" : "");
+                            return " " + ctx.parsed.y + "g dispensed";
+                        }
+                    }
+                }
+            },
+            scales: {
+                yCount: {
+                    type: "linear",
+                    position: "left",
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0, color: "#3498DB", font: { size: 11 } },
+                    grid: { color: "#f0f0f0" },
+                    title: { display: true, text: "Feed Count", color: "#3498DB", font: { size: 11 } }
+                },
+                yGrams: {
+                    type: "linear",
+                    position: "right",
+                    beginAtZero: true,
+                    ticks: { color: "#F39C12", font: { size: 11 }, callback: function(v){ return v + "g"; } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: "Grams", color: "#F39C12", font: { size: 11 } }
+                },
+                x: {
+                    ticks: { color: "#666", font: { size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
 }
