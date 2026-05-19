@@ -1,23 +1,23 @@
 // ─────────────────────────────────────────────
-//   DOM Elements
+//  DOM Elements
 // ─────────────────────────────────────────────
-const timeEl                 = document.getElementById('clock-time');
-const ampmEl                 = document.getElementById('clock-ampm');
-const dateEl                 = document.getElementById('clock-date');
-const feedPercentageEl       = document.getElementById('feed-percentage');
-const feedStatusText         = document.getElementById('feed-status-text');
-const feedProgressBar        = document.getElementById('feed-progress-bar');
-const lastFeedingTimeEl      = document.getElementById('last-feeding-time');
-const lastFeedingAmountEl    = document.getElementById('last-feeding-amount');
-const nextFeedingTimeEl      = document.getElementById('next-feeding-time');
+const timeEl               = document.getElementById('clock-time');
+const ampmEl               = document.getElementById('clock-ampm');
+const dateEl               = document.getElementById('clock-date');
+const feedPercentageEl     = document.getElementById('feed-percentage');
+const feedStatusText       = document.getElementById('feed-status-text');
+const feedProgressBar      = document.getElementById('feed-progress-bar');
+const lastFeedingTimeEl    = document.getElementById('last-feeding-time');
+const lastFeedingAmountEl  = document.getElementById('last-feeding-amount');
+const nextFeedingTimeEl    = document.getElementById('next-feeding-time');
 const nextFeedingCountdownEl = document.getElementById('next-feeding-countdown');
-const scheduleListEl         = document.getElementById('schedule-list');
-const logsListEl             = document.getElementById('logs-list');
-const btnFeedNow             = document.getElementById('btn-manual-feed');
+const scheduleListEl       = document.getElementById('schedule-list');
+const logsListEl           = document.getElementById('logs-list');
+const btnFeedNow           = document.getElementById('btn-manual-feed');
 
 // ─────────────────────────────────────────────
-//   Apply safe defaults immediately so the
-//   dashboard is never blank while Firebase loads
+//  Apply safe defaults immediately so the
+//  dashboard is never blank while Firebase loads
 // ─────────────────────────────────────────────
 function applyDefaults() {
     if (feedPercentageEl)    feedPercentageEl.textContent    = '0';
@@ -33,7 +33,7 @@ function applyDefaults() {
 applyDefaults();
 
 // ─────────────────────────────────────────────
-//   Live Clock
+//  Live Clock
 // ─────────────────────────────────────────────
 function updateClock() {
     const now = new Date();
@@ -75,7 +75,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ─────────────────────────────────────────────
-//   SPA Navigation
+//  SPA Navigation
 // ─────────────────────────────────────────────
 const navItems      = document.querySelectorAll('.sidebar-nav .nav-item');
 const pageSections  = document.querySelectorAll('.page-section');
@@ -87,8 +87,7 @@ const sectionTitles = {
     'schedule'     : 'Schedule Management',
     'logs'         : 'System Logs',
     'inventory'    : 'Inventory',
-    'settings'     : 'Settings',
-    'analysis'     : 'Data Analysis'
+    'settings'     : 'Settings'
 };
 
 navItems.forEach(item => {
@@ -105,9 +104,6 @@ navItems.forEach(item => {
         if (targetSection) targetSection.style.display = 'block';
         if (pageTitleEl && sectionTitles[targetId]) pageTitleEl.textContent = sectionTitles[targetId];
 
-        // Init analytics tab listeners when switching to analysis
-        if (targetId === "analysis") initAnalyticsTabs();
-
         // Auto-close sidebar on mobile
         if (window.innerWidth <= 992 && sidebar?.classList.contains('open')) {
             toggleSidebar();
@@ -116,7 +112,7 @@ navItems.forEach(item => {
 });
 
 // ─────────────────────────────────────────────
-//   Mobile Sidebar
+//  Mobile Sidebar
 // ─────────────────────────────────────────────
 const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
 const sidebar        = document.querySelector('.sidebar');
@@ -131,7 +127,7 @@ mobileMenuBtn?.addEventListener('click', toggleSidebar);
 sidebarOverlay?.addEventListener('click', toggleSidebar);
 
 // ─────────────────────────────────────────────
-//   Firebase — Auth & Device Binding
+//  Firebase — Auth & Device Binding
 // ─────────────────────────────────────────────
 const auth = firebase.auth();
 let userDeviceId = null;
@@ -196,7 +192,7 @@ async function handleMissingDevice(user) {
 }
 
 // ─────────────────────────────────────────────
-//   Realtime Listeners
+//  Realtime Listeners
 // ─────────────────────────────────────────────
 function initializeRealtimeListeners() {
     // Status
@@ -235,7 +231,7 @@ function initializeRealtimeListeners() {
 }
 
 // ─────────────────────────────────────────────
-//   Settings — Save
+//  Settings — Save
 // ─────────────────────────────────────────────
 document.getElementById('btn-save-settings')?.addEventListener('click', () => {
     if (!feederRef) return alert('Device not connected yet.');
@@ -262,30 +258,16 @@ document.getElementById('btn-save-settings')?.addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
-//   Feed Now
+//  Feed Now
 // ─────────────────────────────────────────────
 btnFeedNow?.addEventListener('click', () => {
     if (!feederRef) return alert('Device not connected yet.');
-
-    const now     = new Date();
-    const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    // Send dispense command to hardware
     feederRef.child('control').update({ dispense_now: true, trigger_time: Date.now() });
-
-    // Write log in the same format as hardware: "Manual Feed Completed (250g)"
-    feederRef.child('logs').push({
-        message  : 'Manual Feed Completed (250g)',
-        type     : 'success',
-        time     : timeStr,
-        timestamp: Date.now()
-    });
-
     alert('Dispense command sent to device!');
 });
 
 // ─────────────────────────────────────────────
-//   Mark Refilled
+//  Mark Refilled
 // ─────────────────────────────────────────────
 document.getElementById('btn-mark-refilled')?.addEventListener('click', () => {
     if (!feederRef) return alert('Device not connected yet.');
@@ -302,14 +284,14 @@ document.getElementById('btn-mark-refilled')?.addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
-//   Logout
+//  Logout
 // ─────────────────────────────────────────────
 document.getElementById('btn-logout')?.addEventListener('click', () => {
     auth.signOut().then(() => window.location.href = 'index.html');
 });
 
 // ─────────────────────────────────────────────
-//   Schedule Form — Dynamic Time Inputs
+//  Schedule Form — Dynamic Time Inputs
 // ─────────────────────────────────────────────
 const timesCountSelect             = document.getElementById('schedule-times-count');
 const dynamicTimeInputsContainer   = document.getElementById('dynamic-time-inputs');
@@ -328,10 +310,9 @@ timesCountSelect?.addEventListener('change', e => {
 });
 
 // ─────────────────────────────────────────────
-//   Schedule Form — Submit
+//  Schedule Form — Submit
 // ─────────────────────────────────────────────
 document.getElementById('schedule-form')?.addEventListener('submit', e => {
-    document.getElementById('schedule-form')?.addEventListener('submit', e => {
     e.preventDefault();
     if (!feederRef) return alert('Device not connected yet.');
 
@@ -364,7 +345,7 @@ document.getElementById('schedule-form')?.addEventListener('submit', e => {
 });
 
 // ─────────────────────────────────────────────
-//   Edit Schedule Modal
+//  Edit Schedule Modal
 // ─────────────────────────────────────────────
 function openEditSchedule(key, day, rawTime, amount) {
     document.getElementById('edit-schedule-key').value    = key;
@@ -399,7 +380,7 @@ document.getElementById('btn-edit-schedule-save')?.addEventListener('click', () 
 });
 
 // ─────────────────────────────────────────────
-//   Delete Schedule Entry
+//  Delete Schedule Entry
 // ─────────────────────────────────────────────
 function deleteScheduleEntry(key) {
     if (!feederRef) return;
@@ -409,7 +390,7 @@ function deleteScheduleEntry(key) {
 }
 
 // ─────────────────────────────────────────────
-//   Delete Log Entry
+//  Delete Log Entry
 // ─────────────────────────────────────────────
 function deleteLogEntry(key) {
     if (!feederRef) return;
@@ -419,7 +400,7 @@ function deleteLogEntry(key) {
 }
 
 // ─────────────────────────────────────────────
-//   Clear All Logs
+//  Clear All Logs
 // ─────────────────────────────────────────────
 document.getElementById('btn-clear-all-logs')?.addEventListener('click', () => {
     if (!feederRef) return alert('Device not connected yet.');
@@ -430,7 +411,7 @@ document.getElementById('btn-clear-all-logs')?.addEventListener('click', () => {
 });
 
 // ─────────────────────────────────────────────
-//   Helper — Update Status Cards
+//  Helper — Update Status Cards
 // ─────────────────────────────────────────────
 function updateStatusCards(data) {
     const level = data.feedLevel || 0;
@@ -465,7 +446,7 @@ function updateStatusCards(data) {
 }
 
 // ─────────────────────────────────────────────
-//   Helper — Render Schedule
+//  Helper — Render Schedule
 // ─────────────────────────────────────────────
 function renderSchedule(data) {
     const fullListEl = document.getElementById('full-schedule-list');
@@ -473,7 +454,7 @@ function renderSchedule(data) {
     if (!data) {
         const msg = '<li>No schedules found.</li>';
         if (scheduleListEl) scheduleListEl.innerHTML = msg;
-        if (fullListEl)      fullListEl.innerHTML     = msg;
+        if (fullListEl)     fullListEl.innerHTML     = msg;
         return;
     }
 
@@ -488,7 +469,7 @@ function renderSchedule(data) {
     const dayOrder = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
     if (scheduleListEl) scheduleListEl.innerHTML = '';
-    if (fullListEl)      fullListEl.innerHTML     = '';
+    if (fullListEl)     fullListEl.innerHTML     = '';
 
     dayOrder.forEach(day => {
         if (!grouped[day]?.length) return;
@@ -551,7 +532,7 @@ function renderSchedule(data) {
 }
 
 // ─────────────────────────────────────────────
-//   Helper — Compute Next Feeding
+//  Helper — Compute Next Feeding
 // ─────────────────────────────────────────────
 function computeNextFeeding(schedules) {
     if (!schedules) {
@@ -611,7 +592,7 @@ function computeNextFeeding(schedules) {
 }
 
 // ─────────────────────────────────────────────
-//   Helper — Render Logs (grouped by date)
+//  Helper — Render Logs (grouped by date)
 // ─────────────────────────────────────────────
 function renderLogsGrouped(data) {
     const fullLogsEl   = document.getElementById('full-logs-list');
@@ -707,7 +688,7 @@ function renderLogsGrouped(data) {
 }
 
 // ─────────────────────────────────────────────
-//   Helper — Format 24h → 12h AM/PM string
+//  Helper — Format 24h → 12h AM/PM string
 // ─────────────────────────────────────────────
 function formatTime12h(raw) {
     let [h, m] = raw.split(':').map(Number);
@@ -717,7 +698,7 @@ function formatTime12h(raw) {
 }
 
 // ─────────────────────────────────────────────
-//   Helper — Show error in dashboard (non-blocking)
+//  Helper — Show error in dashboard (non-blocking)
 // ─────────────────────────────────────────────
 function showError(msg) {
     const banner = document.getElementById('error-banner');
@@ -730,9 +711,9 @@ function showError(msg) {
 }
 
 // ─────────────────────────────────────────────
-//   Analytics — Grams Dispensed per Day & Week
-//   Reads grams from log messages, e.g.:
-//   "Dispensed 50g", "Fed 30g", "50g dispensed"
+//  Analytics — Grams Dispensed per Day & Week
+//  Reads grams from log messages, e.g.:
+//  "Dispensed 50g", "Fed 30g", "50g dispensed"
 // ─────────────────────────────────────────────
 function extractGrams(message) {
     if (!message) return 0;
@@ -749,91 +730,161 @@ function getWeekKey(date) {
     return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
-// ─────────────────────────────────────────────
-//   Analytics — Full complete structural pipeline
-//   Shows: Day / Week / Month views + calendar
-// ─────────────────────────────────────────────
+
 let feedChartInstance = null;
-let analyticsView     = "week";   // "day" | "week" | "month"
-let analyticsMonth    = new Date().getMonth();
-let analyticsYear     = new Date().getFullYear();
-
-// Called from nav click to init view buttons
-function initAnalyticsTabs() {
-    var tabs = document.querySelectorAll(".an-tab");
-    tabs.forEach(function(tab) {
-        tab.addEventListener("click", function() {
-            tabs.forEach(function(t){ t.classList.remove("an-tab-active"); });
-            tab.classList.add("an-tab-active");
-            analyticsView = tab.getAttribute("data-view");
-            if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
-        });
-    });
-
-    var prevBtn = document.getElementById("an-cal-prev");
-    var nextBtn = document.getElementById("an-cal-next");
-    if (prevBtn) prevBtn.addEventListener("click", function() {
-        analyticsMonth--;
-        if (analyticsMonth < 0) { analyticsMonth = 11; analyticsYear--; }
-        if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
-    });
-    if (nextBtn) nextBtn.addEventListener("click", function() {
-        analyticsMonth++;
-        if (analyticsMonth > 11) { analyticsMonth = 0; analyticsYear++; }
-        if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
-    });
-}
 
 function renderAnalytics(logsArray) {
-    window._lastLogsArray = logsArray;
 
-    var container = document.getElementById("analytics-container");
-    if (!container) return;
-
-    // ── Aggregate ALL logs ──────────────────────
-    var byDay   = {};
-    var byWeek  = {};
-    var byMonth = {};
+    const byDay  = {};
+    const byWeek = {};
 
     (logsArray || []).forEach(function(log) {
-        var grams = extractGrams(log.message);
-        if (grams <= 0) return; // Ignore records without clear dispensing totals
+        const grams = extractGrams(log.message);
+        if (grams <= 0) return;
 
-        var dateObj = new Date(log.timestamp);
-        
-        // Generate distinct sorting keys for computation
-        var dayKey   = dateObj.toLocaleDateString(undefined, { year: 'numeric', month: '2-digit', day: '2-digit' });
-        var weekKey  = getWeekKey(dateObj);
-        var monthKey = dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'long' });
+        const d       = new Date(log.timestamp);
+        const dayKey  = d.toISOString().slice(0, 10);
+        const weekKey = getWeekKey(d);
 
-        // Accumulate mathematical parameters
-        byDay[dayKey]     = (byDay[dayKey] || 0) + grams;
-        byWeek[weekKey]   = (byWeek[weekKey] || 0) + grams;
-        byMonth[monthKey] = (byMonth[monthKey] || 0) + grams;
+        if (!byDay[dayKey])   byDay[dayKey]   = { count: 0, grams: 0 };
+        if (!byWeek[weekKey]) byWeek[weekKey] = { count: 0, grams: 0 };
+
+        byDay[dayKey].count++;
+        byDay[dayKey].grams   += grams;
+        byWeek[weekKey].count++;
+        byWeek[weekKey].grams += grams;
     });
 
-    // ── Update Calendar View Labels ──────────────────
-    var calendarTitle = document.getElementById("an-calendar-title");
-    if (calendarTitle) {
-        var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        calendarTitle.textContent = monthNames[analyticsMonth] + " " + analyticsYear;
+    const dayEntries  = Object.entries(byDay).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+    const weekEntries = Object.entries(byWeek).sort(function(a,b){ return b[0].localeCompare(a[0]); });
+
+    const todayKey    = new Date().toISOString().slice(0, 10);
+    const thisWeekKey = getWeekKey(new Date());
+
+    const todayCount  = (byDay[todayKey]    || {}).count || 0;
+    const todayGrams  = (byDay[todayKey]    || {}).grams || 0;
+    const weekCount   = (byWeek[thisWeekKey]|| {}).count || 0;
+    const weekGrams   = (byWeek[thisWeekKey]|| {}).grams || 0;
+    const totalCount  = dayEntries.reduce(function(s,e){ return s + e[1].count; }, 0);
+    const totalGrams  = dayEntries.reduce(function(s,e){ return s + e[1].grams; }, 0);
+
+    function fmt(g) { return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; }
+    function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+    setEl("an-today-count",      todayCount);
+    setEl("an-today-grams",      fmt(todayGrams));
+    setEl("an-week-count",       weekCount);
+    setEl("an-week-grams",       fmt(weekGrams));
+    setEl("an-total-count",      totalCount);
+    setEl("total-feed-dispensed", fmt(totalGrams));
+
+    var weekTableBody = document.getElementById("an-week-table-body");
+    if (weekTableBody) {
+        if (weekEntries.length === 0) {
+            weekTableBody.innerHTML = "<tr><td colspan=\"3\" style=\"color:#aaa;font-size:13px;padding:12px;\">No data yet.</td></tr>";
+        } else {
+            weekTableBody.innerHTML = weekEntries.slice(0, 8).map(function(entry) {
+                var key = entry[0]; var v = entry[1];
+                var parts  = key.split("-W");
+                var yr = parts[0]; var wk = parts[1];
+                var isThis = (key === thisWeekKey);
+                var rowStyle = isThis ? "background:#f0faf6;font-weight:600;" : "";
+                var badge = isThis ? " <span style=\"color:#2EBA8A;font-size:11px;\">(this week)</span>" : "";
+                return "<tr style=\"" + rowStyle + "\">" +
+                    "<td style=\"padding:10px 14px;color:#555;\">Week " + wk + ", " + yr + badge + "</td>" +
+                    "<td style=\"padding:10px 14px;text-align:center;color:#2EBA8A;font-weight:700;font-size:16px;\">" + v.count + "</td>" +
+                    "<td style=\"padding:10px 14px;text-align:center;color:#888;font-size:13px;\">" + fmt(v.grams) + "</td>" +
+                    "</tr>";
+            }).join("");
+        }
     }
 
-    // ── Pass Computed Structural States to UI Components ──
-    if (analyticsView === "day") {
-        updateAnalyticsUI(byDay, "Daily Breakdown (grams)");
-    } else if (analyticsView === "week") {
-        updateAnalyticsUI(byWeek, "Weekly Trends (grams)");
-    } else if (analyticsView === "month") {
-        updateAnalyticsUI(byMonth, "Monthly Usage Summary (grams)");
-    }
-}
+    var canvas = document.getElementById("feedChart");
+    if (!canvas) return;
 
-function updateAnalyticsUI(aggregatedData, activeLabel) {
-    // Debug point to track successful data structuring pipeline
-    console.log(`[Analytics UI] Rendering ${activeLabel}:`, aggregatedData);
+    var chartEntries = dayEntries.slice(-14);
+    var labels = chartEntries.map(function(e) {
+        var key = e[0];
+        if (key === todayKey) return "Today";
+        var d = new Date(key + "T00:00:00");
+        return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    });
+    var countData = chartEntries.map(function(e){ return e[1].count; });
+    var gramsData = chartEntries.map(function(e){ return e[1].grams; });
+    var barColors = chartEntries.map(function(e){
+        return e[0] === todayKey ? "#2EBA8A" : "rgba(52,152,219,0.75)";
+    });
 
-    // Dynamic Chart/Table updates go here. If you are using standard chart systems 
-    // like Chart.js, you can safely grab Object.keys(aggregatedData) for labels 
-    // and Object.values(aggregatedData) for data inputs.
+    if (feedChartInstance) feedChartInstance.destroy();
+
+    feedChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Feeds Dispensed",
+                    data: countData,
+                    backgroundColor: barColors,
+                    borderRadius: 6,
+                    borderSkipped: false,
+                    yAxisID: "yCount",
+                    order: 1
+                },
+                {
+                    label: "Grams Dispensed",
+                    data: gramsData,
+                    type: "line",
+                    borderColor: "#F39C12",
+                    backgroundColor: "rgba(243,156,18,0.08)",
+                    borderWidth: 2,
+                    pointBackgroundColor: "#F39C12",
+                    pointRadius: 4,
+                    tension: 0.3,
+                    fill: true,
+                    yAxisID: "yGrams",
+                    order: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: { position: "top", labels: { usePointStyle: true, padding: 18, font: { size: 12 } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            if (ctx.dataset.label === "Feeds Dispensed")
+                                return " " + ctx.parsed.y + " feed" + (ctx.parsed.y !== 1 ? "s" : "");
+                            return " " + ctx.parsed.y + "g dispensed";
+                        }
+                    }
+                }
+            },
+            scales: {
+                yCount: {
+                    type: "linear",
+                    position: "left",
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0, color: "#3498DB", font: { size: 11 } },
+                    grid: { color: "#f0f0f0" },
+                    title: { display: true, text: "Feed Count", color: "#3498DB", font: { size: 11 } }
+                },
+                yGrams: {
+                    type: "linear",
+                    position: "right",
+                    beginAtZero: true,
+                    ticks: { color: "#F39C12", font: { size: 11 }, callback: function(v){ return v + "g"; } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: "Grams", color: "#F39C12", font: { size: 11 } }
+                },
+                x: {
+                    ticks: { color: "#666", font: { size: 11 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
 }
