@@ -1124,9 +1124,8 @@ function renderDetailTable(entries, colLabel, labelFn) {
         '<th style="padding:10px 14px;text-align:center;color:#00C896;font-weight:600;">Feeds</th>' +
         '<th style="padding:10px 14px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table>';
-}
 
-// ─────────────────────────────────────────────
+    // ─────────────────────────────────────────────
 //  Analytics — Initialize Once
 // ─────────────────────────────────────────────
 let analyticsInitialized = false;
@@ -1430,3 +1429,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('Smart Feeding Dashboard Fully Loaded');
 });
+}
