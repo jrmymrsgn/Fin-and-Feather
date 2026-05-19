@@ -76,9 +76,6 @@ updateClock();
 
 // ─────────────────────────────────────────────
 //  SPA Navigation
-//  FIX: Added 'analysis' to sectionTitles so the
-//  analytics section is properly reachable and
-//  its tabs are initialized on navigation.
 // ─────────────────────────────────────────────
 const navItems     = document.querySelectorAll('.sidebar-nav .nav-item');
 const pageSections = document.querySelectorAll('.page-section');
@@ -91,7 +88,7 @@ const sectionTitles = {
     'logs'         : 'System Logs',
     'inventory'    : 'Inventory',
     'settings'     : 'Settings',
-    'analysis'     : 'Analytics'          // FIX: was missing
+    'analysis'     : 'Analytics'
 };
 
 navItems.forEach(item => {
@@ -140,9 +137,6 @@ const auth = firebase.auth();
 let userDeviceId = null;
 let feederRef    = null;
 
-// FIX: Track Firebase connection state and show a
-//      persistent banner when the device goes offline,
-//      then clear it automatically on reconnect.
 const connectedRef = firebase.database().ref('.info/connected');
 connectedRef.on('value', snap => {
     if (snap.val() === false) {
@@ -214,20 +208,18 @@ async function handleMissingDevice(user) {
 //  Realtime Listeners
 // ─────────────────────────────────────────────
 function initializeRealtimeListeners() {
-    // Status
     feederRef.child('status').on('value', snap => {
         updateStatusCards(snap.val() || {});
     }, err => console.error('Status listener error:', err));
 
-    // Schedule
     feederRef.child('schedule').on('value', snap => {
         const data = snap.val();
         renderSchedule(data);
         computeNextFeeding(data);
     }, err => console.error('Schedule listener error:', err));
 
-    // Logs — fetch latest 50, sort client-side (avoids requiring a Firebase index)
-    feederRef.child('logs').limitToLast(50).on('value', snap => {
+    // Fetch ALL logs (no limit) so analytics has complete history
+    feederRef.child('logs').on('value', snap => {
         renderLogsGrouped(snap.val());
     }, err => {
         console.error('Logs listener error:', err);
@@ -236,7 +228,6 @@ function initializeRealtimeListeners() {
         if (fullLogsEl) fullLogsEl.innerHTML = '<li>Failed to load logs. Please refresh.</li>';
     });
 
-    // Settings
     feederRef.child('settings').on('value', snap => {
         const data = snap.val();
         if (!data) return;
@@ -248,9 +239,6 @@ function initializeRealtimeListeners() {
         if (set('setting-hopper-height')) set('setting-hopper-height').value = data.hopperHeight   || '';
     }, err => console.error('Settings listener error:', err));
 
-    // FIX: Inventory — listen for dedicated inventory node so the
-    //      inventory section always reflects the latest stock data
-    //      without relying solely on the status card's feed level.
     feederRef.child('inventory').on('value', snap => {
         updateInventorySection(snap.val() || {});
     }, err => console.error('Inventory listener error:', err));
@@ -292,11 +280,8 @@ btnFeedNow?.addEventListener('click', () => {
     const now     = new Date();
     const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    // Send dispense command to hardware
     feederRef.child('control').update({ dispense_now: true, trigger_time: Date.now() });
 
-    // Write log in the same format as hardware: "Manual Feed Completed (250g)"
-    // so renderAnalytics picks it up exactly like a scheduled feed
     feederRef.child('logs').push({
         message  : 'Manual Feed Completed (250g)',
         type     : 'success',
@@ -460,7 +445,6 @@ function updateStatusCards(data) {
     if (feedPercentageEl) feedPercentageEl.textContent  = level;
     if (feedProgressBar)  feedProgressBar.style.width   = `${level}%`;
 
-    // Keep inventory section level in sync
     const invLevelEl = document.getElementById('inv-level');
     if (invLevelEl) invLevelEl.textContent = level + '%';
 
@@ -488,10 +472,7 @@ function updateStatusCards(data) {
 }
 
 // ─────────────────────────────────────────────
-//  FIX: Inventory Section — dedicated updater
-//  Reads from devices/<id>/inventory node.
-//  Populate any inventory-specific elements that
-//  live in section-inventory beyond just inv-level.
+//  Inventory Section
 // ─────────────────────────────────────────────
 function updateInventorySection(data) {
     const invLevelEl       = document.getElementById('inv-level');
@@ -500,8 +481,8 @@ function updateInventorySection(data) {
     const invStatusEl      = document.getElementById('inv-status');
     const invProgressEl    = document.getElementById('inv-progress-bar');
 
-    const level = data.feedLevel ?? data.level ?? 0;
-    const weight = data.weightGrams ?? null;
+    const level      = data.feedLevel ?? data.level ?? 0;
+    const weight     = data.weightGrams ?? null;
     const lastRefill = data.lastRefillTime ?? null;
 
     if (invLevelEl)      invLevelEl.textContent      = level + '%';
@@ -536,7 +517,6 @@ function renderSchedule(data) {
         return;
     }
 
-    // Group by day
     const grouped = {};
     for (const key in data) {
         const item = { ...data[key], _key: key };
@@ -622,7 +602,7 @@ function computeNextFeeding(schedules) {
 
     const now           = new Date();
     const dayNames      = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const currentDayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1; // 0=Mon … 6=Sun
+    const currentDayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
     let nextDate        = null;
 
     for (const key in schedules) {
@@ -683,19 +663,21 @@ function renderLogsGrouped(data) {
         if (logsListEl)   logsListEl.innerHTML   = emptyLogsMsg;
         if (fullLogsEl)   fullLogsEl.innerHTML   = emptyLogsMsg;
         if (refillListEl) refillListEl.innerHTML = emptyRefillMsg;
+        // Still render analytics with empty data so summary cards show zeros
+        renderAnalytics([]);
         return;
     }
 
-    // Sort client-side: newest first (no Firebase index required)
+    // Sort all logs newest first — no limitToLast so analytics sees full history
     const logsArray = Object.entries(data)
         .map(([key, val]) => ({ ...val, _key: key }))
-        .filter(log => log.timestamp)                     // skip malformed entries
-        .sort((a, b) => b.timestamp - a.timestamp);       // newest first
+        .filter(log => log.timestamp)
+        .sort((a, b) => b.timestamp - a.timestamp);
 
-    // Group by date label
+    // Group by date label for display
     const grouped = {};
     logsArray.forEach(log => {
-        const d     = new Date(log.timestamp || Date.now());
+        const d     = new Date(log.timestamp);
         const label = d.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
         if (!grouped[label]) grouped[label] = [];
         grouped[label].push(log);
@@ -761,7 +743,7 @@ function renderLogsGrouped(data) {
         refillListEl.innerHTML = emptyRefillMsg;
     }
 
-    // Re-render analytics whenever logs update
+    // Always re-render analytics with the full logs array
     renderAnalytics(logsArray);
 }
 
@@ -777,9 +759,6 @@ function formatTime12h(raw) {
 
 // ─────────────────────────────────────────────
 //  Helper — Show / Clear error banner
-//  FIX: Added clearError() so the reconnect
-//       listener can dismiss the offline banner
-//       automatically when Firebase comes back.
 // ─────────────────────────────────────────────
 function showError(msg) {
     const banner = document.getElementById('error-banner');
@@ -797,14 +776,42 @@ function clearError() {
 }
 
 // ─────────────────────────────────────────────
-//  Analytics — helpers
+//  Analytics — Extract grams from a log message
+//
+//  Handles all known message formats:
+//    "Manual Feed Completed (250g)"   → 250
+//    "Feed Dispensed: 150g"           → 150
+//    "Scheduled Feed Done 100 g"      → 100
+//    "Feed Completed (75.5g)"         → 75.5
+//    "Stock manually marked..."       → 0  (skip)
+//    "Low stock warning"              → 0  (skip)
 // ─────────────────────────────────────────────
-function extractGrams(message) {
-    if (!message) return 0;
-    const match = message.match(/(\d+(\.\d+)?)\s*g\b/i);
-    return match ? parseFloat(match[1]) : 0;
+function extractGrams(log) {
+    // Priority 1: dedicated grams field written by firmware or Feed Now button
+    if (log.grams && parseFloat(log.grams) > 0) return parseFloat(log.grams);
+
+    const msg = log.message || '';
+
+    // Priority 2: regex — matches "250g", "(250g)", "250 g", "250.5g" anywhere in the string
+    const match = msg.match(/(\d+(\.\d+)?)\s*g\b/i);
+    if (match) return parseFloat(match[1]);
+
+    // Priority 3: message is clearly a feed event but has no gram value
+    // (e.g. old hardware logs that just say "Feed Dispensed")
+    // Use 250g as the default portion size so old data still shows up.
+    const isFeedEvent = /feed\s*(completed|dispensed|done|cycle)/i.test(msg)
+                     || /dispens(ed|ing)/i.test(msg)
+                     || /scheduled\s*feed/i.test(msg)
+                     || /manual\s*feed/i.test(msg);
+    if (isFeedEvent) return 250;
+
+    // Not a feed event (refill notice, warning, error, etc.) — skip
+    return 0;
 }
 
+// ─────────────────────────────────────────────
+//  Analytics — week key helper (ISO week)
+// ─────────────────────────────────────────────
 function getWeekKey(date) {
     const d   = new Date(date);
     const day = d.getDay() || 7;
@@ -815,22 +822,19 @@ function getWeekKey(date) {
 }
 
 // ─────────────────────────────────────────────
-//  Analytics — full rewrite
-//  Shows: Day / Week / Month views + calendar
+//  Analytics — state
 // ─────────────────────────────────────────────
 let feedChartInstance = null;
-let analyticsView     = 'week';   // "day" | "week" | "month"
+let analyticsView     = 'week';
 let analyticsMonth    = new Date().getMonth();
 let analyticsYear     = new Date().getFullYear();
-let analyticsTabsInit = false;    // FIX: guard so listeners are only added once
+let analyticsTabsInit = false;
 
-// FIX: initAnalyticsTabs now guards against double-binding event listeners
-//      by checking the analyticsTabsInit flag. Previously, navigating to the
-//      analytics section multiple times would stack duplicate listeners on
-//      every tab button, causing the view to switch multiple times per click.
+// ─────────────────────────────────────────────
+//  Analytics — init tabs (safe, called on nav)
+// ─────────────────────────────────────────────
 function initAnalyticsTabs() {
     if (analyticsTabsInit) {
-        // Tabs already wired up — just re-render with latest data
         if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
         return;
     }
@@ -846,44 +850,48 @@ function initAnalyticsTabs() {
         });
     });
 
-    const prevBtn = document.getElementById('an-cal-prev');
-    const nextBtn = document.getElementById('an-cal-next');
-
-    prevBtn?.addEventListener('click', () => {
+    document.getElementById('an-cal-prev')?.addEventListener('click', () => {
         analyticsMonth--;
         if (analyticsMonth < 0) { analyticsMonth = 11; analyticsYear--; }
         if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
     });
 
-    nextBtn?.addEventListener('click', () => {
+    document.getElementById('an-cal-next')?.addEventListener('click', () => {
         analyticsMonth++;
         if (analyticsMonth > 11) { analyticsMonth = 0; analyticsYear++; }
         if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
     });
 
-    // Render immediately with whatever data we already have
     if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
 }
 
+// ─────────────────────────────────────────────
+//  Analytics — main render
+// ─────────────────────────────────────────────
 function renderAnalytics(logsArray) {
-    window._lastLogsArray = logsArray;
+    // Cache so tabs/nav can re-render without refetching Firebase
+    window._lastLogsArray = logsArray || [];
 
     const container = document.getElementById('analytics-container');
     if (!container) return;
 
-    // ── Aggregate ALL logs ──────────────────────
+    // ── Aggregate by day / week / month ────────
     const byDay   = {};
     const byWeek  = {};
     const byMonth = {};
 
     (logsArray || []).forEach(log => {
-        const grams = extractGrams(log.message);
+        // Must have a timestamp to be placed on the timeline
+        if (!log.timestamp) return;
+
+        const grams = extractGrams(log);
+        // Skip non-feed entries (0g means it's a refill notice, warning, etc.)
         if (grams <= 0) return;
 
         const d        = new Date(log.timestamp);
-        const dayKey   = d.toISOString().slice(0, 10);
-        const weekKey  = getWeekKey(d);
-        const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        const dayKey   = d.toISOString().slice(0, 10);                       // "2026-05-20"
+        const weekKey  = getWeekKey(d);                                       // "2026-W21"
+        const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); // "2026-05"
 
         if (!byDay[dayKey])     byDay[dayKey]     = { count: 0, grams: 0 };
         if (!byWeek[weekKey])   byWeek[weekKey]   = { count: 0, grams: 0 };
@@ -894,6 +902,7 @@ function renderAnalytics(logsArray) {
         byMonth[monthKey].count++; byMonth[monthKey].grams += grams;
     });
 
+    // ── Summary card values ─────────────────────
     const todayKey    = new Date().toISOString().slice(0, 10);
     const thisWeekKey = getWeekKey(new Date());
     const nowMonth    = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
@@ -910,7 +919,6 @@ function renderAnalytics(logsArray) {
     const fmt   = g  => (g % 1 === 0) ? g + 'g' : g.toFixed(1) + 'g';
     const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-    // ── Update summary cards ────────────────────
     setEl('an-today-count',       todayCount);
     setEl('an-today-grams',       fmt(todayGrams));
     setEl('an-week-count',        weekCount);
@@ -920,13 +928,15 @@ function renderAnalytics(logsArray) {
     setEl('an-total-count',       totalCount);
     setEl('total-feed-dispensed', fmt(totalGrams));
 
-    // ── Render based on active tab ──────────────
+    // ── Render active tab view ──────────────────
     if (analyticsView === 'day')   renderDayView(byDay, todayKey);
     if (analyticsView === 'week')  renderWeekView(byWeek, thisWeekKey);
     if (analyticsView === 'month') renderMonthCalendar(byDay);
 }
 
-// ── DAY VIEW ───────────────────────────────────
+// ─────────────────────────────────────────────
+//  Analytics — Day View (last 30 days)
+// ─────────────────────────────────────────────
 function renderDayView(byDay, todayKey) {
     const entries = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
     const labels  = entries.map(e => {
@@ -944,7 +954,9 @@ function renderDayView(byDay, todayKey) {
     });
 }
 
-// ── WEEK VIEW ──────────────────────────────────
+// ─────────────────────────────────────────────
+//  Analytics — Week View (last 12 weeks)
+// ─────────────────────────────────────────────
 function renderWeekView(byWeek, thisWeekKey) {
     const entries = Object.entries(byWeek).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
     const labels  = entries.map(e => {
@@ -964,7 +976,9 @@ function renderWeekView(byWeek, thisWeekKey) {
     });
 }
 
-// ── MONTH CALENDAR VIEW ────────────────────────
+// ─────────────────────────────────────────────
+//  Analytics — Month Calendar View
+// ─────────────────────────────────────────────
 function renderMonthCalendar(byDay) {
     const chartArea = document.getElementById('an-chart-area');
     const tableArea = document.getElementById('an-table-area');
@@ -982,7 +996,6 @@ function renderMonthCalendar(byDay) {
     const daysInMonth  = new Date(analyticsYear, analyticsMonth + 1, 0).getDate();
     const todayKey     = new Date().toISOString().slice(0, 10);
 
-    // Find max feeds in the displayed month for heat-map scaling
     let monthMax = 1;
     for (let d = 1; d <= daysInMonth; d++) {
         const k = `${analyticsYear}-${String(analyticsMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
@@ -991,14 +1004,12 @@ function renderMonthCalendar(byDay) {
 
     let html = '<div style="font-family:\'DM Sans\',sans-serif;">';
 
-    // Day headers
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
     ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
         html += `<div style="text-align:center;font-size:11px;font-weight:600;color:#94A3B8;padding:4px 0;">${d}</div>`;
     });
     html += '</div>';
 
-    // Calendar cells
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
 
     for (let i = 0; i < firstDay; i++) {
@@ -1025,8 +1036,9 @@ function renderMonthCalendar(byDay) {
             bg = '#F8FAFC'; textColor = '#CBD5E1'; border = '1px solid #E2E8F0';
         }
 
+        const gramsLabel = data.grams % 1 === 0 ? data.grams : data.grams.toFixed(1);
         const tooltip = data.count > 0
-            ? `title="${data.count} feed${data.count !== 1 ? 's' : ''} · ${data.grams % 1 === 0 ? data.grams : data.grams.toFixed(1)}g"`
+            ? `title="${data.count} feed${data.count !== 1 ? 's' : ''} · ${gramsLabel}g"`
             : 'title="No feeds"';
 
         html += `<div ${tooltip} style="aspect-ratio:1;background:${bg};border:${border};border-radius:8px;
@@ -1039,7 +1051,6 @@ function renderMonthCalendar(byDay) {
     }
     html += '</div>';
 
-    // Legend
     html += '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">';
     html += '<span style="font-size:11px;color:#94A3B8;">Less</span>';
     ['rgba(99,179,237,0.2)','rgba(99,179,237,0.4)','rgba(80,190,180,0.6)','rgba(40,200,150,0.8)','#00C896'].forEach(c => {
@@ -1054,7 +1065,6 @@ function renderMonthCalendar(byDay) {
     chartArea.innerHTML    = html;
     if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
 
-    // Monthly summary cards below calendar
     if (tableArea) {
         const monthKey = `${analyticsYear}-${String(analyticsMonth + 1).padStart(2,'0')}`;
         let mCount = 0; let mGrams = 0;
@@ -1063,7 +1073,9 @@ function renderMonthCalendar(byDay) {
             if (byDay[k]) { mCount += byDay[k].count; mGrams += byDay[k].grams; }
         }
         const mName = monthNames[analyticsMonth];
-        const avgG  = mCount > 0 ? (mGrams / mCount % 1 === 0 ? mGrams / mCount : (mGrams / mCount).toFixed(1)) + 'g' : '--';
+        const avgG  = mCount > 0
+            ? ((mGrams / mCount) % 1 === 0 ? (mGrams / mCount) : (mGrams / mCount).toFixed(1)) + 'g'
+            : '--';
         tableArea.innerHTML = `
             <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
                 <div style="flex:1;min-width:120px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;text-align:center;">
@@ -1082,7 +1094,9 @@ function renderMonthCalendar(byDay) {
     }
 }
 
-// ── Chart builder ──────────────────────────────
+// ─────────────────────────────────────────────
+//  Analytics — Chart builder
+// ─────────────────────────────────────────────
 function buildChart(labels, counts, grams, colors, title) {
     const chartArea = document.getElementById('an-chart-area');
     const calNav    = document.getElementById('an-cal-nav');
@@ -1096,6 +1110,18 @@ function buildChart(labels, counts, grams, colors, title) {
     if (!canvas) return;
 
     if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
+
+    // Show a friendly empty state if there is no data yet
+    if (labels.length === 0) {
+        chartArea.style.height = 'auto';
+        chartArea.innerHTML = `
+            <div style="text-align:center;padding:48px 16px;color:#94A3B8;">
+                <div style="font-size:40px;margin-bottom:12px;">🍽️</div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No feed data yet</div>
+                <div style="font-size:13px;">Use the Feed Now button or let a scheduled feed run,<br>then come back here to see your analytics.</div>
+            </div>`;
+        return;
+    }
 
     feedChartInstance = new Chart(canvas, {
         type: 'bar',
@@ -1112,19 +1138,19 @@ function buildChart(labels, counts, grams, colors, title) {
                     order          : 1
                 },
                 {
-                    label           : 'Grams',
-                    data            : grams,
-                    type            : 'line',
-                    borderColor     : '#F39C12',
-                    backgroundColor : 'rgba(243,156,18,0.06)',
-                    borderWidth     : 2.5,
+                    label               : 'Grams',
+                    data                : grams,
+                    type                : 'line',
+                    borderColor         : '#F39C12',
+                    backgroundColor     : 'rgba(243,156,18,0.06)',
+                    borderWidth         : 2.5,
                     pointBackgroundColor: '#F39C12',
-                    pointRadius     : 4,
-                    pointHoverRadius: 6,
-                    tension         : 0.4,
-                    fill            : true,
-                    yAxisID         : 'yGrams',
-                    order           : 0
+                    pointRadius         : 4,
+                    pointHoverRadius    : 6,
+                    tension             : 0.4,
+                    fill                : true,
+                    yAxisID             : 'yGrams',
+                    order               : 0
                 }
             ]
         },
@@ -1172,13 +1198,15 @@ function buildChart(labels, counts, grams, colors, title) {
     });
 }
 
-// ── Detail Table ───────────────────────────────
+// ─────────────────────────────────────────────
+//  Analytics — Detail Table
+// ─────────────────────────────────────────────
 function renderDetailTable(entries, colLabel, labelFn) {
     const tableArea = document.getElementById('an-table-area');
     if (!tableArea) return;
 
     if (entries.length === 0) {
-        tableArea.innerHTML = '<p style="color:#94A3B8;font-size:13px;padding:16px 0;">No data yet.</p>';
+        tableArea.innerHTML = '<p style="color:#94A3B8;font-size:13px;padding:16px 0;">No feed data yet.</p>';
         return;
     }
 
