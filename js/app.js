@@ -626,6 +626,9 @@ function renderLogsGrouped(data) {
         return;
     }
 
+    const logsArray = Object.entries(data)
+    .map(([key, val]) => ({ ...val, _key: key }));
+
  
   
     // Group by date label
@@ -782,64 +785,122 @@ function initAnalyticsTabs() {
 }
 
 function renderAnalytics(logsArray) {
+
     window._lastLogsArray = logsArray;
 
-    var container = document.getElementById("analytics-container");
+    const container = document.getElementById("analytics-container");
+
     if (!container) return;
 
-    // ── Aggregate ALL logs ──────────────────────
-    var byDay  = {};
-    var byWeek = {};
-    var byMonth = {};
+    const byDay = {};
+    const byWeek = {};
+    const byMonth = {};
 
-    (logsArray || []).forEach(function(log) {
-        var grams = extractGrams(log.message);
+    // ONLY USE MESSAGE GRAMS
+    (logsArray || []).forEach((log, index) => {
+
+        const grams = extractGrams(log.message);
+
         if (grams <= 0) return;
 
-        var d = new Date(log.timestamp || Date.now());
-        var dayKey   = d.toISOString().slice(0, 10);
-        var weekKey  = getWeekKey(d);
-        var monthKey = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        // Fake grouping without timestamp
+        const fakeDate = new Date();
 
-        if (!byDay[dayKey])     byDay[dayKey]     = { count: 0, grams: 0 };
-        if (!byWeek[weekKey])   byWeek[weekKey]   = { count: 0, grams: 0 };
-        if (!byMonth[monthKey]) byMonth[monthKey] = { count: 0, grams: 0 };
+        fakeDate.setDate(fakeDate.getDate() - index);
 
-        byDay[dayKey].count++;     byDay[dayKey].grams     += grams;
-        byWeek[weekKey].count++;   byWeek[weekKey].grams   += grams;
-        byMonth[monthKey].count++; byMonth[monthKey].grams += grams;
+        const dayKey = fakeDate.toISOString().slice(0, 10);
+
+        const weekKey = getWeekKey(fakeDate);
+
+        const monthKey =
+            fakeDate.getFullYear() +
+            "-" +
+            String(fakeDate.getMonth() + 1).padStart(2, "0");
+
+        if (!byDay[dayKey]) {
+            byDay[dayKey] = { count: 0, grams: 0 };
+        }
+
+        if (!byWeek[weekKey]) {
+            byWeek[weekKey] = { count: 0, grams: 0 };
+        }
+
+        if (!byMonth[monthKey]) {
+            byMonth[monthKey] = { count: 0, grams: 0 };
+        }
+
+        byDay[dayKey].count++;
+        byDay[dayKey].grams += grams;
+
+        byWeek[weekKey].count++;
+        byWeek[weekKey].grams += grams;
+
+        byMonth[monthKey].count++;
+        byMonth[monthKey].grams += grams;
     });
 
-    var todayKey    = new Date().toISOString().slice(0, 10);
-    var thisWeekKey = getWeekKey(new Date());
-    var nowMonth    = new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0");
+    const todayKey = new Date().toISOString().slice(0, 10);
 
-    var todayCount  = (byDay[todayKey]     || {}).count || 0;
-    var todayGrams  = (byDay[todayKey]     || {}).grams || 0;
-    var weekCount   = (byWeek[thisWeekKey] || {}).count || 0;
-    var weekGrams   = (byWeek[thisWeekKey] || {}).grams || 0;
-    var monthCount  = (byMonth[nowMonth]   || {}).count || 0;
-    var monthGrams  = (byMonth[nowMonth]   || {}).grams || 0;
-    var totalCount  = Object.values(byDay).reduce(function(s,v){ return s + v.count; }, 0);
-    var totalGrams  = Object.values(byDay).reduce(function(s,v){ return s + v.grams; }, 0);
+    const thisWeekKey = getWeekKey(new Date());
 
-    function fmt(g) { return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; }
-    function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+    const nowMonth =
+        new Date().getFullYear() +
+        "-" +
+        String(new Date().getMonth() + 1).padStart(2, "0");
 
-    // ── Update summary cards ────────────────────
-    setEl("an-today-count",       todayCount);
-    setEl("an-today-grams",       fmt(todayGrams));
-    setEl("an-week-count",        weekCount);
-    setEl("an-week-grams",        fmt(weekGrams));
-    setEl("an-month-count",       monthCount);
-    setEl("an-month-grams",       fmt(monthGrams));
-    setEl("an-total-count",       totalCount);
+    const todayCount = (byDay[todayKey] || {}).count || 0;
+    const todayGrams = (byDay[todayKey] || {}).grams || 0;
+
+    const weekCount = (byWeek[thisWeekKey] || {}).count || 0;
+    const weekGrams = (byWeek[thisWeekKey] || {}).grams || 0;
+
+    const monthCount = (byMonth[nowMonth] || {}).count || 0;
+    const monthGrams = (byMonth[nowMonth] || {}).grams || 0;
+
+    const totalCount = Object.values(byDay)
+        .reduce((s, v) => s + v.count, 0);
+
+    const totalGrams = Object.values(byDay)
+        .reduce((s, v) => s + v.grams, 0);
+
+    function fmt(g) {
+        return (g % 1 === 0)
+            ? g + "g"
+            : g.toFixed(1) + "g";
+    }
+
+    function setEl(id, val) {
+        const el = document.getElementById(id);
+
+        if (el) el.textContent = val;
+    }
+
+    // Summary Cards
+    setEl("an-today-count", todayCount);
+    setEl("an-today-grams", fmt(todayGrams));
+
+    setEl("an-week-count", weekCount);
+    setEl("an-week-grams", fmt(weekGrams));
+
+    setEl("an-month-count", monthCount);
+    setEl("an-month-grams", fmt(monthGrams));
+
+    setEl("an-total-count", totalCount);
+
     setEl("total-feed-dispensed", fmt(totalGrams));
 
-    // ── Render based on active tab ──────────────
-    if (analyticsView === "day")   renderDayView(byDay,  todayKey);
-    if (analyticsView === "week")  renderWeekView(byWeek, thisWeekKey);
-    if (analyticsView === "month") renderMonthCalendar(byDay);
+    // Views
+    if (analyticsView === "day") {
+        renderDayView(byDay, todayKey);
+    }
+
+    if (analyticsView === "week") {
+        renderWeekView(byWeek, thisWeekKey);
+    }
+
+    if (analyticsView === "month") {
+        renderMonthCalendar(byDay);
+    }
 }
 
 // ── DAY VIEW ───────────────────────────────────
