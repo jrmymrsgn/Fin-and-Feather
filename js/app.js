@@ -1,34 +1,34 @@
 // ─────────────────────────────────────────────
 //  DOM Elements
 // ─────────────────────────────────────────────
-const timeEl                 = document.getElementById('clock-time');
-const ampmEl                 = document.getElementById('clock-ampm');
-const dateEl                 = document.getElementById('clock-date');
-const feedPercentageEl       = document.getElementById('feed-percentage');
-const feedStatusText         = document.getElementById('feed-status-text');
-const feedProgressBar        = document.getElementById('feed-progress-bar');
-const lastFeedingTimeEl      = document.getElementById('last-feeding-time');
-const lastFeedingAmountEl    = document.getElementById('last-feeding-amount');
-const nextFeedingTimeEl      = document.getElementById('next-feeding-time');
+const timeEl               = document.getElementById('clock-time');
+const ampmEl               = document.getElementById('clock-ampm');
+const dateEl               = document.getElementById('clock-date');
+const feedPercentageEl     = document.getElementById('feed-percentage');
+const feedStatusText       = document.getElementById('feed-status-text');
+const feedProgressBar      = document.getElementById('feed-progress-bar');
+const lastFeedingTimeEl    = document.getElementById('last-feeding-time');
+const lastFeedingAmountEl  = document.getElementById('last-feeding-amount');
+const nextFeedingTimeEl    = document.getElementById('next-feeding-time');
 const nextFeedingCountdownEl = document.getElementById('next-feeding-countdown');
-const scheduleListEl         = document.getElementById('schedule-list');
-const logsListEl             = document.getElementById('logs-list');
-const btnFeedNow             = document.getElementById('btn-manual-feed');
+const scheduleListEl       = document.getElementById('schedule-list');
+const logsListEl           = document.getElementById('logs-list');
+const btnFeedNow           = document.getElementById('btn-manual-feed');
 
 // ─────────────────────────────────────────────
 //  Apply safe defaults immediately so the
 //  dashboard is never blank while Firebase loads
 // ─────────────────────────────────────────────
 function applyDefaults() {
-    if (feedPercentageEl)       feedPercentageEl.textContent       = '0';
-    if (feedProgressBar)        feedProgressBar.style.width        = '0%';
-    if (feedStatusText)         feedStatusText.textContent         = '--';
-    if (lastFeedingTimeEl)      lastFeedingTimeEl.textContent      = '--:-- --';
-    if (lastFeedingAmountEl)    lastFeedingAmountEl.textContent    = '--';
-    if (nextFeedingTimeEl)      nextFeedingTimeEl.textContent      = '--:-- --';
+    if (feedPercentageEl)    feedPercentageEl.textContent    = '0';
+    if (feedProgressBar)     feedProgressBar.style.width     = '0%';
+    if (feedStatusText)      feedStatusText.textContent      = '--';
+    if (lastFeedingTimeEl)   lastFeedingTimeEl.textContent   = '--:-- --';
+    if (lastFeedingAmountEl) lastFeedingAmountEl.textContent = '--';
+    if (nextFeedingTimeEl)   nextFeedingTimeEl.textContent   = '--:-- --';
     if (nextFeedingCountdownEl) nextFeedingCountdownEl.textContent = 'In --h --m';
-    if (scheduleListEl)         scheduleListEl.innerHTML           = '<li>Loading schedules…</li>';
-    if (logsListEl)             logsListEl.innerHTML               = '<li>Loading logs…</li>';
+    if (scheduleListEl)      scheduleListEl.innerHTML        = '<li>Loading schedules…</li>';
+    if (logsListEl)          logsListEl.innerHTML            = '<li>Loading logs…</li>';
 }
 applyDefaults();
 
@@ -53,7 +53,7 @@ function updateClock() {
     const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const months = ['January','February','March','April','May','June',
                     'July','August','September','October','November','December'];
-    const date        = now.getDate();
+    const date       = now.getDate();
     const weekOfMonth = Math.ceil((date - 1 - now.getDay()) / 7) + 1;
 
     if (dateEl) dateEl.textContent = `Today • ${days[now.getDay()]}, Week ${weekOfMonth}`;
@@ -77,9 +77,9 @@ updateClock();
 // ─────────────────────────────────────────────
 //  SPA Navigation
 // ─────────────────────────────────────────────
-const navItems     = document.querySelectorAll('.sidebar-nav .nav-item');
-const pageSections = document.querySelectorAll('.page-section');
-const pageTitleEl  = document.getElementById('page-title');
+const navItems      = document.querySelectorAll('.sidebar-nav .nav-item');
+const pageSections  = document.querySelectorAll('.page-section');
+const pageTitleEl   = document.getElementById('page-title');
 
 const sectionTitles = {
     'dashboard'    : 'Admin Dashboard',
@@ -87,8 +87,7 @@ const sectionTitles = {
     'schedule'     : 'Schedule Management',
     'logs'         : 'System Logs',
     'inventory'    : 'Inventory',
-    'settings'     : 'Settings',
-    'analysis'     : 'Analytics'
+    'settings'     : 'Settings'
 };
 
 navItems.forEach(item => {
@@ -100,13 +99,13 @@ navItems.forEach(item => {
 
         pageSections.forEach(s => s.style.display = 'none');
 
-        const targetId      = item.getAttribute('data-target');
+        const targetId = item.getAttribute('data-target');
         const targetSection = document.getElementById('section-' + targetId);
         if (targetSection) targetSection.style.display = 'block';
         if (pageTitleEl && sectionTitles[targetId]) pageTitleEl.textContent = sectionTitles[targetId];
 
         // Init analytics tab listeners when switching to analysis
-        if (targetId === 'analysis') initAnalyticsTabs();
+        if (targetId === "analysis") initAnalyticsTabs();
 
         // Auto-close sidebar on mobile
         if (window.innerWidth <= 992 && sidebar?.classList.contains('open')) {
@@ -136,15 +135,6 @@ sidebarOverlay?.addEventListener('click', toggleSidebar);
 const auth = firebase.auth();
 let userDeviceId = null;
 let feederRef    = null;
-
-const connectedRef = firebase.database().ref('.info/connected');
-connectedRef.on('value', snap => {
-    if (snap.val() === false) {
-        showError('⚠️ Lost connection to Firebase. Attempting to reconnect…');
-    } else {
-        clearError();
-    }
-});
 
 auth.onAuthStateChanged(async user => {
     if (!user) {
@@ -208,18 +198,20 @@ async function handleMissingDevice(user) {
 //  Realtime Listeners
 // ─────────────────────────────────────────────
 function initializeRealtimeListeners() {
+    // Status
     feederRef.child('status').on('value', snap => {
         updateStatusCards(snap.val() || {});
     }, err => console.error('Status listener error:', err));
 
+    // Schedule
     feederRef.child('schedule').on('value', snap => {
         const data = snap.val();
         renderSchedule(data);
         computeNextFeeding(data);
     }, err => console.error('Schedule listener error:', err));
 
-    // Fetch ALL logs (no limit) so analytics has complete history
-    feederRef.child('logs').on('value', snap => {
+    // Logs — fetch latest 50, sort client-side (avoids requiring a Firebase index)
+    feederRef.child('logs').limitToLast(50).on('value', snap => {
         renderLogsGrouped(snap.val());
     }, err => {
         console.error('Logs listener error:', err);
@@ -228,20 +220,17 @@ function initializeRealtimeListeners() {
         if (fullLogsEl) fullLogsEl.innerHTML = '<li>Failed to load logs. Please refresh.</li>';
     });
 
+    // Settings
     feederRef.child('settings').on('value', snap => {
         const data = snap.val();
         if (!data) return;
         const set = id => document.getElementById(id);
-        if (set('setting-phone'))         set('setting-phone').value         = data.phoneNumber    || '';
-        if (set('setting-sms-enable'))    set('setting-sms-enable').checked  = data.smsEnabled     !== false;
-        if (set('setting-servo-open'))    set('setting-servo-open').value    = data.servoOpenTime  || '';
-        if (set('setting-servo-closed'))  set('setting-servo-closed').value  = data.servoClosedTime || '';
-        if (set('setting-hopper-height')) set('setting-hopper-height').value = data.hopperHeight   || '';
+        if (set('setting-phone'))        set('setting-phone').value        = data.phoneNumber   || '';
+        if (set('setting-sms-enable'))   set('setting-sms-enable').checked = data.smsEnabled    !== false;
+        if (set('setting-servo-open'))   set('setting-servo-open').value   = data.servoOpenTime || '';
+        if (set('setting-servo-closed')) set('setting-servo-closed').value = data.servoClosedTime || '';
+        if (set('setting-hopper-height')) set('setting-hopper-height').value = data.hopperHeight || '';
     }, err => console.error('Settings listener error:', err));
-
-    feederRef.child('inventory').on('value', snap => {
-        updateInventorySection(snap.val() || {});
-    }, err => console.error('Inventory listener error:', err));
 }
 
 // ─────────────────────────────────────────────
@@ -280,8 +269,11 @@ btnFeedNow?.addEventListener('click', () => {
     const now     = new Date();
     const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
+    // Send dispense command to hardware
     feederRef.child('control').update({ dispense_now: true, trigger_time: Date.now() });
 
+    // Write log in the same format as hardware: "Manual Feed Completed (250g)"
+    // so renderAnalytics picks it up exactly like a scheduled feed
     feederRef.child('logs').push({
         message  : 'Manual Feed Completed (250g)',
         type     : 'success',
@@ -319,8 +311,8 @@ document.getElementById('btn-logout')?.addEventListener('click', () => {
 // ─────────────────────────────────────────────
 //  Schedule Form — Dynamic Time Inputs
 // ─────────────────────────────────────────────
-const timesCountSelect           = document.getElementById('schedule-times-count');
-const dynamicTimeInputsContainer = document.getElementById('dynamic-time-inputs');
+const timesCountSelect             = document.getElementById('schedule-times-count');
+const dynamicTimeInputsContainer   = document.getElementById('dynamic-time-inputs');
 
 timesCountSelect?.addEventListener('change', e => {
     const count = parseInt(e.target.value);
@@ -354,10 +346,10 @@ document.getElementById('schedule-form')?.addEventListener('submit', e => {
             const time = input.value;
             if (!time) return;
             feederRef.child('schedule').push({
-                day    : cb.value,
-                time   : formatTime12h(time),
-                rawTime: time,
-                amount : parseInt(amount)
+                day      : cb.value,
+                time     : formatTime12h(time),
+                rawTime  : time,
+                amount   : parseInt(amount)
             });
         });
     });
@@ -442,20 +434,20 @@ document.getElementById('btn-clear-all-logs')?.addEventListener('click', () => {
 function updateStatusCards(data) {
     const level = data.feedLevel || 0;
 
-    if (feedPercentageEl) feedPercentageEl.textContent  = level;
-    if (feedProgressBar)  feedProgressBar.style.width   = `${level}%`;
+    if (feedPercentageEl) feedPercentageEl.textContent   = level;
+    if (feedProgressBar)  feedProgressBar.style.width    = `${level}%`;
 
     const invLevelEl = document.getElementById('inv-level');
     if (invLevelEl) invLevelEl.textContent = level + '%';
 
     if (feedStatusText) {
         if (level <= 20) {
-            feedStatusText.textContent = 'Low';
-            feedStatusText.style.color = 'var(--color-feed-low)';
+            feedStatusText.textContent  = 'Low';
+            feedStatusText.style.color  = 'var(--color-feed-low)';
             feedProgressBar?.classList.add('low');
         } else {
-            feedStatusText.textContent = 'Healthy';
-            feedStatusText.style.color = 'var(--text-muted)';
+            feedStatusText.textContent  = 'Healthy';
+            feedStatusText.style.color  = 'var(--text-muted)';
             feedProgressBar?.classList.remove('low');
         }
     }
@@ -472,39 +464,6 @@ function updateStatusCards(data) {
 }
 
 // ─────────────────────────────────────────────
-//  Inventory Section
-// ─────────────────────────────────────────────
-function updateInventorySection(data) {
-    const invLevelEl       = document.getElementById('inv-level');
-    const invWeightEl      = document.getElementById('inv-weight');
-    const invLastRefillEl  = document.getElementById('inv-last-refill');
-    const invStatusEl      = document.getElementById('inv-status');
-    const invProgressEl    = document.getElementById('inv-progress-bar');
-
-    const level      = data.feedLevel ?? data.level ?? 0;
-    const weight     = data.weightGrams ?? null;
-    const lastRefill = data.lastRefillTime ?? null;
-
-    if (invLevelEl)      invLevelEl.textContent      = level + '%';
-    if (invProgressEl)   invProgressEl.style.width   = level + '%';
-    if (invWeightEl)     invWeightEl.textContent      = weight != null ? weight + 'g' : '--';
-    if (invLastRefillEl) invLastRefillEl.textContent  = lastRefill || '--';
-
-    if (invStatusEl) {
-        if (level <= 10) {
-            invStatusEl.textContent = '🔴 Critical — Refill Immediately';
-            invStatusEl.style.color = '#E74C3C';
-        } else if (level <= 25) {
-            invStatusEl.textContent = '🟠 Low — Refill Soon';
-            invStatusEl.style.color = '#F39C12';
-        } else {
-            invStatusEl.textContent = '🟢 Healthy';
-            invStatusEl.style.color = '#2EBA8A';
-        }
-    }
-}
-
-// ─────────────────────────────────────────────
 //  Helper — Render Schedule
 // ─────────────────────────────────────────────
 function renderSchedule(data) {
@@ -517,6 +476,7 @@ function renderSchedule(data) {
         return;
     }
 
+    // Group by day
     const grouped = {};
     for (const key in data) {
         const item = { ...data[key], _key: key };
@@ -595,21 +555,21 @@ function renderSchedule(data) {
 function computeNextFeeding(schedules) {
     if (!schedules) {
         window.nextFeedingDate = null;
-        if (nextFeedingTimeEl)      nextFeedingTimeEl.textContent      = '--:-- --';
+        if (nextFeedingTimeEl)     nextFeedingTimeEl.textContent     = '--:-- --';
         if (nextFeedingCountdownEl) nextFeedingCountdownEl.textContent = 'In --h --m';
         return;
     }
 
-    const now           = new Date();
-    const dayNames      = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const currentDayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
-    let nextDate        = null;
+    const now          = new Date();
+    const dayNames     = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const currentDayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1; // 0=Mon … 6=Sun
+    let nextDate       = null;
 
     for (const key in schedules) {
         const { day, rawTime } = schedules[key];
         if (!day || !rawTime) continue;
 
-        const [h, m]       = rawTime.split(':').map(Number);
+        const [h, m]     = rawTime.split(':').map(Number);
         const targetDayIdx = dayNames.indexOf(day);
         if (targetDayIdx === -1) continue;
 
@@ -656,28 +616,26 @@ function renderLogsGrouped(data) {
     const fullLogsEl   = document.getElementById('full-logs-list');
     const refillListEl = document.getElementById('refill-history-list');
 
-    const emptyLogsMsg   = '<li>No recent logs.</li>';
+    const emptyLogsMsg  = '<li>No recent logs.</li>';
     const emptyRefillMsg = '<li style="color:#888;font-size:14px;">No recent manual refills logged.</li>';
 
     if (!data) {
         if (logsListEl)   logsListEl.innerHTML   = emptyLogsMsg;
         if (fullLogsEl)   fullLogsEl.innerHTML   = emptyLogsMsg;
         if (refillListEl) refillListEl.innerHTML = emptyRefillMsg;
-        // Still render analytics with empty data so summary cards show zeros
-        renderAnalytics([]);
         return;
     }
 
-    // Sort all logs newest first — no limitToLast so analytics sees full history
+    // Sort client-side: newest first (no Firebase index required)
     const logsArray = Object.entries(data)
         .map(([key, val]) => ({ ...val, _key: key }))
-        .filter(log => log.timestamp)
-        .sort((a, b) => b.timestamp - a.timestamp);
+        .filter(log => log.timestamp)                              // skip malformed entries
+        .sort((a, b) => b.timestamp - a.timestamp);               // newest first
 
-    // Group by date label for display
+    // Group by date label
     const grouped = {};
     logsArray.forEach(log => {
-        const d     = new Date(log.timestamp);
+        const d = new Date(log.timestamp || Date.now());
         const label = d.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
         if (!grouped[label]) grouped[label] = [];
         grouped[label].push(log);
@@ -743,7 +701,7 @@ function renderLogsGrouped(data) {
         refillListEl.innerHTML = emptyRefillMsg;
     }
 
-    // Always re-render analytics with the full logs array
+    // Re-render analytics whenever logs update
     renderAnalytics(logsArray);
 }
 
@@ -758,140 +716,94 @@ function formatTime12h(raw) {
 }
 
 // ─────────────────────────────────────────────
-//  Helper — Show / Clear error banner
+//  Helper — Show error in dashboard (non-blocking)
 // ─────────────────────────────────────────────
 function showError(msg) {
     const banner = document.getElementById('error-banner');
     if (banner) {
-        banner.textContent   = msg;
+        banner.textContent = msg;
         banner.style.display = 'block';
     } else {
         console.warn('Dashboard error:', msg);
     }
 }
 
-function clearError() {
-    const banner = document.getElementById('error-banner');
-    if (banner) banner.style.display = 'none';
+// ─────────────────────────────────────────────
+//  Analytics — Grams Dispensed per Day & Week
+//  Reads grams from log messages, e.g.:
+//  "Dispensed 50g", "Fed 30g", "50g dispensed"
+// ─────────────────────────────────────────────
+function extractGrams(message) {
+    if (!message) return 0;
+    const match = message.match(/(\d+(\.\d+)?)\s*g\b/i);
+    return match ? parseFloat(match[1]) : 0;
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Extract grams from a log message
-//
-//  Handles all known message formats:
-//    "Manual Feed Completed (250g)"   → 250
-//    "Feed Dispensed: 150g"           → 150
-//    "Scheduled Feed Done 100 g"      → 100
-//    "Feed Completed (75.5g)"         → 75.5
-//    "Stock manually marked..."       → 0  (skip)
-//    "Low stock warning"              → 0  (skip)
-// ─────────────────────────────────────────────
-function extractGrams(log) {
-    // Priority 1: dedicated grams field written by firmware or Feed Now button
-    if (log.grams && parseFloat(log.grams) > 0) return parseFloat(log.grams);
-
-    const msg = log.message || '';
-
-    // Priority 2: regex — matches "250g", "(250g)", "250 g", "250.5g" anywhere in the string
-    const match = msg.match(/(\d+(\.\d+)?)\s*g\b/i);
-    if (match) return parseFloat(match[1]);
-
-    // Priority 3: message is clearly a feed event but has no gram value
-    // (e.g. old hardware logs that just say "Feed Dispensed")
-    // Use 250g as the default portion size so old data still shows up.
-    const isFeedEvent = /feed\s*(completed|dispensed|done|cycle)/i.test(msg)
-                     || /dispens(ed|ing)/i.test(msg)
-                     || /scheduled\s*feed/i.test(msg)
-                     || /manual\s*feed/i.test(msg);
-    if (isFeedEvent) return 250;
-
-    // Not a feed event (refill notice, warning, error, etc.) — skip
-    return 0;
-}
-
-// ─────────────────────────────────────────────
-//  Analytics — week key helper (ISO week)
-// ─────────────────────────────────────────────
 function getWeekKey(date) {
     const d   = new Date(date);
     const day = d.getDay() || 7;
     d.setDate(d.getDate() + 4 - day);
     const yearStart = new Date(d.getFullYear(), 0, 1);
-    const week      = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
     return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
+
+
 // ─────────────────────────────────────────────
-//  Analytics — state
+//  Analytics — full rewrite
+//  Shows: Day / Week / Month views + calendar
 // ─────────────────────────────────────────────
 let feedChartInstance = null;
-let analyticsView     = 'week';
+let analyticsView     = "week";   // "day" | "week" | "month"
 let analyticsMonth    = new Date().getMonth();
 let analyticsYear     = new Date().getFullYear();
-let analyticsTabsInit = false;
 
-// ─────────────────────────────────────────────
-//  Analytics — init tabs (safe, called on nav)
-// ─────────────────────────────────────────────
+// Called from nav click to init view buttons
 function initAnalyticsTabs() {
-    if (analyticsTabsInit) {
-        if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
-        return;
-    }
-    analyticsTabsInit = true;
-
-    const tabs = document.querySelectorAll('.an-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            tabs.forEach(t => t.classList.remove('an-tab-active'));
-            tab.classList.add('an-tab-active');
-            analyticsView = tab.getAttribute('data-view');
+    var tabs = document.querySelectorAll(".an-tab");
+    tabs.forEach(function(tab) {
+        tab.addEventListener("click", function() {
+            tabs.forEach(function(t){ t.classList.remove("an-tab-active"); });
+            tab.classList.add("an-tab-active");
+            analyticsView = tab.getAttribute("data-view");
             if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
         });
     });
 
-    document.getElementById('an-cal-prev')?.addEventListener('click', () => {
+    var prevBtn = document.getElementById("an-cal-prev");
+    var nextBtn = document.getElementById("an-cal-next");
+    if (prevBtn) prevBtn.addEventListener("click", function() {
         analyticsMonth--;
         if (analyticsMonth < 0) { analyticsMonth = 11; analyticsYear--; }
         if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
     });
-
-    document.getElementById('an-cal-next')?.addEventListener('click', () => {
+    if (nextBtn) nextBtn.addEventListener("click", function() {
         analyticsMonth++;
         if (analyticsMonth > 11) { analyticsMonth = 0; analyticsYear++; }
         if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
     });
-
-    if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — main render
-// ─────────────────────────────────────────────
 function renderAnalytics(logsArray) {
-    // Cache so tabs/nav can re-render without refetching Firebase
-    window._lastLogsArray = logsArray || [];
+    window._lastLogsArray = logsArray;
 
-    const container = document.getElementById('analytics-container');
+    var container = document.getElementById("analytics-container");
     if (!container) return;
 
-    // ── Aggregate by day / week / month ────────
-    const byDay   = {};
-    const byWeek  = {};
-    const byMonth = {};
+    // ── Aggregate ALL logs ──────────────────────
+    var byDay  = {};
+    var byWeek = {};
+    var byMonth = {};
 
-    (logsArray || []).forEach(log => {
-        // Must have a timestamp to be placed on the timeline
-        if (!log.timestamp) return;
-
-        const grams = extractGrams(log);
-        // Skip non-feed entries (0g means it's a refill notice, warning, etc.)
+    (logsArray || []).forEach(function(log) {
+        var grams = extractGrams(log.message);
         if (grams <= 0) return;
 
-        const d        = new Date(log.timestamp);
-        const dayKey   = d.toISOString().slice(0, 10);                       // "2026-05-20"
-        const weekKey  = getWeekKey(d);                                       // "2026-W21"
-        const monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); // "2026-05"
+        var d        = new Date(log.timestamp);
+        var dayKey   = d.toISOString().slice(0, 10);
+        var weekKey  = getWeekKey(d);
+        var monthKey = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
 
         if (!byDay[dayKey])     byDay[dayKey]     = { count: 0, grams: 0 };
         if (!byWeek[weekKey])   byWeek[weekKey]   = { count: 0, grams: 0 };
@@ -902,333 +814,314 @@ function renderAnalytics(logsArray) {
         byMonth[monthKey].count++; byMonth[monthKey].grams += grams;
     });
 
-    // ── Summary card values ─────────────────────
-    const todayKey    = new Date().toISOString().slice(0, 10);
-    const thisWeekKey = getWeekKey(new Date());
-    const nowMonth    = new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0');
+    var todayKey    = new Date().toISOString().slice(0, 10);
+    var thisWeekKey = getWeekKey(new Date());
+    var nowMonth    = new Date().getFullYear() + "-" + String(new Date().getMonth() + 1).padStart(2, "0");
 
-    const todayCount  = (byDay[todayKey]     || {}).count || 0;
-    const todayGrams  = (byDay[todayKey]     || {}).grams || 0;
-    const weekCount   = (byWeek[thisWeekKey] || {}).count || 0;
-    const weekGrams   = (byWeek[thisWeekKey] || {}).grams || 0;
-    const monthCount  = (byMonth[nowMonth]   || {}).count || 0;
-    const monthGrams  = (byMonth[nowMonth]   || {}).grams || 0;
-    const totalCount  = Object.values(byDay).reduce((s, v) => s + v.count, 0);
-    const totalGrams  = Object.values(byDay).reduce((s, v) => s + v.grams, 0);
+    var todayCount  = (byDay[todayKey]     || {}).count || 0;
+    var todayGrams  = (byDay[todayKey]     || {}).grams || 0;
+    var weekCount   = (byWeek[thisWeekKey] || {}).count || 0;
+    var weekGrams   = (byWeek[thisWeekKey] || {}).grams || 0;
+    var monthCount  = (byMonth[nowMonth]   || {}).count || 0;
+    var monthGrams  = (byMonth[nowMonth]   || {}).grams || 0;
+    var totalCount  = Object.values(byDay).reduce(function(s,v){ return s + v.count; }, 0);
+    var totalGrams  = Object.values(byDay).reduce(function(s,v){ return s + v.grams; }, 0);
 
-    const fmt   = g  => (g % 1 === 0) ? g + 'g' : g.toFixed(1) + 'g';
-    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    function fmt(g) { return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; }
+    function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
 
-    setEl('an-today-count',       todayCount);
-    setEl('an-today-grams',       fmt(todayGrams));
-    setEl('an-week-count',        weekCount);
-    setEl('an-week-grams',        fmt(weekGrams));
-    setEl('an-month-count',       monthCount);
-    setEl('an-month-grams',       fmt(monthGrams));
-    setEl('an-total-count',       totalCount);
-    setEl('total-feed-dispensed', fmt(totalGrams));
+    // ── Update summary cards ────────────────────
+    setEl("an-today-count",       todayCount);
+    setEl("an-today-grams",       fmt(todayGrams));
+    setEl("an-week-count",        weekCount);
+    setEl("an-week-grams",        fmt(weekGrams));
+    setEl("an-month-count",       monthCount);
+    setEl("an-month-grams",       fmt(monthGrams));
+    setEl("an-total-count",       totalCount);
+    setEl("total-feed-dispensed", fmt(totalGrams));
 
-    // ── Render active tab view ──────────────────
-    if (analyticsView === 'day')   renderDayView(byDay, todayKey);
-    if (analyticsView === 'week')  renderWeekView(byWeek, thisWeekKey);
-    if (analyticsView === 'month') renderMonthCalendar(byDay);
+    // ── Render based on active tab ──────────────
+    if (analyticsView === "day")   renderDayView(byDay,  todayKey);
+    if (analyticsView === "week")  renderWeekView(byWeek, thisWeekKey);
+    if (analyticsView === "month") renderMonthCalendar(byDay);
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Day View (last 30 days)
-// ─────────────────────────────────────────────
+// ── DAY VIEW ───────────────────────────────────
 function renderDayView(byDay, todayKey) {
-    const entries = Object.entries(byDay).sort((a, b) => a[0].localeCompare(b[0])).slice(-30);
-    const labels  = entries.map(e => {
-        const d = new Date(e[0] + 'T00:00:00');
-        return e[0] === todayKey ? 'Today' : d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    var entries = Object.entries(byDay).sort(function(a,b){ return a[0].localeCompare(b[0]); }).slice(-30);
+    var labels  = entries.map(function(e) {
+        var d = new Date(e[0] + "T00:00:00");
+        return e[0] === todayKey ? "Today" : d.toLocaleDateString(undefined, { month:"short", day:"numeric" });
     });
-    const counts = entries.map(e => e[1].count);
-    const grams  = entries.map(e => e[1].grams);
-    const colors = entries.map(e => e[0] === todayKey ? '#00C896' : 'rgba(99,179,237,0.8)');
+    var counts  = entries.map(function(e){ return e[1].count; });
+    var grams   = entries.map(function(e){ return e[1].grams; });
+    var colors  = entries.map(function(e){ return e[0] === todayKey ? "#00C896" : "rgba(99,179,237,0.8)"; });
 
-    buildChart(labels, counts, grams, colors, 'Daily Feeds — Last 30 Days');
-    renderDetailTable(entries, 'Date', key => {
-        const d = new Date(key + 'T00:00:00');
-        return key === todayKey ? 'Today' : d.toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' });
+    buildChart(labels, counts, grams, colors, "Daily Feeds — Last 30 Days");
+    renderDetailTable(entries, "Date", function(key) {
+        var d = new Date(key + "T00:00:00");
+        return key === todayKey ? "Today" : d.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     });
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Week View (last 12 weeks)
-// ─────────────────────────────────────────────
+// ── WEEK VIEW ──────────────────────────────────
 function renderWeekView(byWeek, thisWeekKey) {
-    const entries = Object.entries(byWeek).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
-    const labels  = entries.map(e => {
-        const parts = e[0].split('-W');
-        return e[0] === thisWeekKey ? 'This Week' : `W${parts[1]} '${parts[0].slice(2)}`;
+    var entries = Object.entries(byWeek).sort(function(a,b){ return a[0].localeCompare(b[0]); }).slice(-12);
+    var labels  = entries.map(function(e) {
+        var parts = e[0].split("-W");
+        return e[0] === thisWeekKey ? "This Week" : "W" + parts[1] + " '" + parts[0].slice(2);
     });
-    const counts = entries.map(e => e[1].count);
-    const grams  = entries.map(e => e[1].grams);
-    const colors = entries.map(e => e[0] === thisWeekKey ? '#00C896' : 'rgba(99,179,237,0.8)');
+    var counts  = entries.map(function(e){ return e[1].count; });
+    var grams   = entries.map(function(e){ return e[1].grams; });
+    var colors  = entries.map(function(e){ return e[0] === thisWeekKey ? "#00C896" : "rgba(99,179,237,0.8)"; });
 
-    buildChart(labels, counts, grams, colors, 'Weekly Feeds — Last 12 Weeks');
-    renderDetailTable(entries, 'Week', key => {
-        const parts = key.split('-W');
-        return key === getWeekKey(new Date())
-            ? `<strong>Week ${parts[1]}, ${parts[0]}</strong> <span style="color:#00C896;font-size:11px;">(current)</span>`
-            : `Week ${parts[1]}, ${parts[0]}`;
+    buildChart(labels, counts, grams, colors, "Weekly Feeds — Last 12 Weeks");
+    renderDetailTable(entries, "Week", function(key) {
+        var parts = key.split("-W");
+        return (key === GetWeekKeyNow()) ? "<strong>Week " + parts[1] + ", " + parts[0] + "</strong> <span style='color:#00C896;font-size:11px;'>(current)</span>"
+            : "Week " + parts[1] + ", " + parts[0];
     });
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Month Calendar View
-// ─────────────────────────────────────────────
+function GetWeekKeyNow() { return getWeekKey(new Date()); }
+
+// ── MONTH CALENDAR VIEW ────────────────────────
 function renderMonthCalendar(byDay) {
-    const chartArea = document.getElementById('an-chart-area');
-    const tableArea = document.getElementById('an-table-area');
-    const calNav    = document.getElementById('an-cal-nav');
+    var chartArea  = document.getElementById("an-chart-area");
+    var tableArea  = document.getElementById("an-table-area");
+    var calNav     = document.getElementById("an-cal-nav");
     if (!chartArea) return;
 
-    if (calNav) calNav.style.display = 'flex';
+    if (calNav) calNav.style.display = "flex";
 
-    const monthNames = ['January','February','March','April','May','June',
-                        'July','August','September','October','November','December'];
-    const label = document.getElementById('an-cal-label');
-    if (label) label.textContent = `${monthNames[analyticsMonth]} ${analyticsYear}`;
+    // Update month/year label
+    var monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var label = document.getElementById("an-cal-label");
+    if (label) label.textContent = monthNames[analyticsMonth] + " " + analyticsYear;
 
-    const firstDay     = new Date(analyticsYear, analyticsMonth, 1).getDay();
-    const daysInMonth  = new Date(analyticsYear, analyticsMonth + 1, 0).getDate();
-    const todayKey     = new Date().toISOString().slice(0, 10);
+    // Build calendar grid
+    var firstDay = new Date(analyticsYear, analyticsMonth, 1).getDay(); // 0=Sun
+    var daysInMonth = new Date(analyticsYear, analyticsMonth + 1, 0).getDate();
+    var todayKey = new Date().toISOString().slice(0, 10);
 
-    let monthMax = 1;
-    for (let d = 1; d <= daysInMonth; d++) {
-        const k = `${analyticsYear}-${String(analyticsMonth + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    // Find max for heat scale
+    var monthMax = 1;
+    for (var d = 1; d <= daysInMonth; d++) {
+        var k = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
         if (byDay[k] && byDay[k].count > monthMax) monthMax = byDay[k].count;
     }
 
-    let html = '<div style="font-family:\'DM Sans\',sans-serif;">';
+    var html = '<div style="font-family:\'DM Sans\',sans-serif;">';
 
+    // Day headers
+    var dayHeaders = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
-    ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
-        html += `<div style="text-align:center;font-size:11px;font-weight:600;color:#94A3B8;padding:4px 0;">${d}</div>`;
+    dayHeaders.forEach(function(d) {
+        html += '<div style="text-align:center;font-size:11px;font-weight:600;color:#94A3B8;padding:4px 0;">' + d + '</div>';
     });
     html += '</div>';
 
+    // Calendar cells
     html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
 
-    for (let i = 0; i < firstDay; i++) {
+    // Empty cells before first day
+    for (var i = 0; i < firstDay; i++) {
         html += '<div style="aspect-ratio:1;"></div>';
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayKey   = `${analyticsYear}-${String(analyticsMonth + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const data     = byDay[dayKey] || { count: 0, grams: 0 };
-        const isToday  = dayKey === todayKey;
-        const intensity = data.count > 0 ? Math.max(0.15, data.count / monthMax) : 0;
+    for (var day = 1; day <= daysInMonth; day++) {
+        var dayKey = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0") + "-" + String(day).padStart(2,"0");
+        var data   = byDay[dayKey] || { count: 0, grams: 0 };
+        var isToday = dayKey === todayKey;
+        var intensity = data.count > 0 ? Math.max(0.15, data.count / monthMax) : 0;
 
-        let bg, textColor, border;
+        var bg, textColor, border;
         if (isToday) {
-            bg = '#00C896'; textColor = '#fff'; border = '2px solid #00C896';
+            bg = "#00C896"; textColor = "#fff"; border = "2px solid #00C896";
         } else if (data.count > 0) {
-            const r = Math.round(99  + (0   - 99)  * intensity);
-            const g = Math.round(179 + (200 - 179) * intensity);
-            const b = Math.round(237 + (150 - 237) * intensity);
-            bg        = `rgba(${r},${g},${b},${0.2 + intensity * 0.8})`;
-            textColor = intensity > 0.5 ? '#fff' : '#1E293B';
-            border    = '1px solid rgba(99,179,237,0.3)';
+            var r = Math.round(99  + (0   - 99)  * intensity);
+            var g = Math.round(179 + (200 - 179) * intensity);
+            var b = Math.round(237 + (150 - 237) * intensity);
+            bg = "rgba(" + r + "," + g + "," + b + "," + (0.2 + intensity * 0.8) + ")";
+            textColor = intensity > 0.5 ? "#fff" : "#1E293B";
+            border = "1px solid rgba(99,179,237,0.3)";
         } else {
-            bg = '#F8FAFC'; textColor = '#CBD5E1'; border = '1px solid #E2E8F0';
+            bg = "#F8FAFC"; textColor = "#CBD5E1"; border = "1px solid #E2E8F0";
         }
 
-        const gramsLabel = data.grams % 1 === 0 ? data.grams : data.grams.toFixed(1);
-        const tooltip = data.count > 0
-            ? `title="${data.count} feed${data.count !== 1 ? 's' : ''} · ${gramsLabel}g"`
+        var tooltip = data.count > 0
+            ? 'title="' + data.count + ' feed' + (data.count !== 1 ? "s" : "") + ' · ' + (data.grams % 1 === 0 ? data.grams : data.grams.toFixed(1)) + 'g"'
             : 'title="No feeds"';
 
-        html += `<div ${tooltip} style="aspect-ratio:1;background:${bg};border:${border};border-radius:8px;
-            display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;
-            transition:transform .15s;position:relative;padding:2px;"
-            onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
-            <span style="font-size:12px;font-weight:${isToday ? '700' : '500'};color:${textColor};">${day}</span>
-            ${data.count > 0 ? `<span style="font-size:9px;color:${textColor};opacity:0.85;line-height:1;">${data.count}x</span>` : ''}
-            </div>`;
+        html += '<div ' + tooltip + ' style="aspect-ratio:1;background:' + bg + ';border:' + border + ';border-radius:8px;' +
+            'display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;' +
+            'transition:transform .15s;position:relative;padding:2px;" ' +
+            'onmouseover="this.style.transform=\'scale(1.08)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
+            '<span style="font-size:12px;font-weight:' + (isToday ? "700" : "500") + ';color:' + textColor + ';">' + day + '</span>' +
+            (data.count > 0 ? '<span style="font-size:9px;color:' + textColor + ';opacity:0.85;line-height:1;">' + data.count + 'x</span>' : '') +
+            '</div>';
     }
     html += '</div>';
 
+    // Legend
     html += '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">';
     html += '<span style="font-size:11px;color:#94A3B8;">Less</span>';
-    ['rgba(99,179,237,0.2)','rgba(99,179,237,0.4)','rgba(80,190,180,0.6)','rgba(40,200,150,0.8)','#00C896'].forEach(c => {
-        html += `<div style="width:16px;height:16px;background:${c};border-radius:3px;border:1px solid rgba(0,0,0,0.05);"></div>`;
+    ["rgba(99,179,237,0.2)","rgba(99,179,237,0.4)","rgba(80,190,180,0.6)","rgba(40,200,150,0.8)","#00C896"].forEach(function(c) {
+        html += '<div style="width:16px;height:16px;background:' + c + ';border-radius:3px;border:1px solid rgba(0,0,0,0.05);"></div>';
     });
     html += '<span style="font-size:11px;color:#94A3B8;">More</span>';
     html += '<div style="width:16px;height:16px;background:#00C896;border-radius:3px;border:2px solid #00C896;"></div>';
     html += '<span style="font-size:11px;color:#94A3B8;">Today</span>';
-    html += '</div></div>';
+    html += '</div>';
 
-    chartArea.style.height = 'auto';
-    chartArea.innerHTML    = html;
+    html += '</div>';
+
+    chartArea.style.height = "auto";
+    chartArea.innerHTML = html;
     if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
 
+    // Monthly summary table below calendar
     if (tableArea) {
-        const monthKey = `${analyticsYear}-${String(analyticsMonth + 1).padStart(2,'0')}`;
-        let mCount = 0; let mGrams = 0;
-        for (let d = 1; d <= daysInMonth; d++) {
-            const k = `${monthKey}-${String(d).padStart(2,'0')}`;
-            if (byDay[k]) { mCount += byDay[k].count; mGrams += byDay[k].grams; }
+        var monthName = monthNames[analyticsMonth];
+        var monthKey  = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0");
+        var mCount = 0; var mGrams = 0;
+        for (var d2 = 1; d2 <= daysInMonth; d2++) {
+            var k2 = monthKey + "-" + String(d2).padStart(2,"0");
+            if (byDay[k2]) { mCount += byDay[k2].count; mGrams += byDay[k2].grams; }
         }
-        const mName = monthNames[analyticsMonth];
-        const avgG  = mCount > 0
-            ? ((mGrams / mCount) % 1 === 0 ? (mGrams / mCount) : (mGrams / mCount).toFixed(1)) + 'g'
-            : '--';
-        tableArea.innerHTML = `
-            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">
-                <div style="flex:1;min-width:120px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#00C896;">${mCount}</div>
-                    <div style="font-size:12px;color:#555;margin-top:2px;">Total Feeds in ${mName}</div>
-                </div>
-                <div style="flex:1;min-width:120px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:14px;text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#F39C12;">${mGrams % 1 === 0 ? mGrams : mGrams.toFixed(1)}g</div>
-                    <div style="font-size:12px;color:#555;margin-top:2px;">Total Grams in ${mName}</div>
-                </div>
-                <div style="flex:1;min-width:120px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px;text-align:center;">
-                    <div style="font-size:22px;font-weight:700;color:#3498DB;">${avgG}</div>
-                    <div style="font-size:12px;color:#555;margin-top:2px;">Avg Grams per Feed</div>
-                </div>
-            </div>`;
+        tableArea.innerHTML =
+            '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">' +
+            '<div style="flex:1;min-width:120px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#00C896;">' + mCount + '</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Total Feeds in ' + monthName + '</div></div>' +
+            '<div style="flex:1;min-width:120px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#F39C12;">' + (mGrams % 1 === 0 ? mGrams : mGrams.toFixed(1)) + 'g</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Total Grams in ' + monthName + '</div></div>' +
+            '<div style="flex:1;min-width:120px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#3498DB;">' + (mCount > 0 ? (mGrams / mCount % 1 === 0 ? mGrams/mCount : (mGrams/mCount).toFixed(1)) + 'g' : "--") + '</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Avg Grams per Feed</div></div>' +
+            '</div>';
     }
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Chart builder
-// ─────────────────────────────────────────────
+// ── Chart builder ──────────────────────────────
 function buildChart(labels, counts, grams, colors, title) {
-    const chartArea = document.getElementById('an-chart-area');
-    const calNav    = document.getElementById('an-cal-nav');
+    var chartArea = document.getElementById("an-chart-area");
+    var calNav    = document.getElementById("an-cal-nav");
     if (!chartArea) return;
-    if (calNav) calNav.style.display = 'none';
+    if (calNav) calNav.style.display = "none";
 
-    chartArea.style.height = '280px';
-    chartArea.innerHTML    = '<canvas id="feedChart"></canvas>';
+    chartArea.style.height = "280px";
+    chartArea.innerHTML = '<canvas id="feedChart"></canvas>';
 
-    const canvas = document.getElementById('feedChart');
+    var canvas = document.getElementById("feedChart");
     if (!canvas) return;
 
     if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
 
-    // Show a friendly empty state if there is no data yet
-    if (labels.length === 0) {
-        chartArea.style.height = 'auto';
-        chartArea.innerHTML = `
-            <div style="text-align:center;padding:48px 16px;color:#94A3B8;">
-                <div style="font-size:40px;margin-bottom:12px;">🍽️</div>
-                <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No feed data yet</div>
-                <div style="font-size:13px;">Use the Feed Now button or let a scheduled feed run,<br>then come back here to see your analytics.</div>
-            </div>`;
-        return;
-    }
-
     feedChartInstance = new Chart(canvas, {
-        type: 'bar',
+        type: "bar",
         data: {
-            labels,
+            labels: labels,
             datasets: [
                 {
-                    label          : 'Feeds Dispensed',
-                    data           : counts,
+                    label: "Feeds Dispensed",
+                    data: counts,
                     backgroundColor: colors,
-                    borderRadius   : 8,
-                    borderSkipped  : false,
-                    yAxisID        : 'yCount',
-                    order          : 1
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    yAxisID: "yCount",
+                    order: 1
                 },
                 {
-                    label               : 'Grams',
-                    data                : grams,
-                    type                : 'line',
-                    borderColor         : '#F39C12',
-                    backgroundColor     : 'rgba(243,156,18,0.06)',
-                    borderWidth         : 2.5,
-                    pointBackgroundColor: '#F39C12',
-                    pointRadius         : 4,
-                    pointHoverRadius    : 6,
-                    tension             : 0.4,
-                    fill                : true,
-                    yAxisID             : 'yGrams',
-                    order               : 0
+                    label: "Grams",
+                    data: grams,
+                    type: "line",
+                    borderColor: "#F39C12",
+                    backgroundColor: "rgba(243,156,18,0.06)",
+                    borderWidth: 2.5,
+                    pointBackgroundColor: "#F39C12",
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: "yGrams",
+                    order: 0
                 }
             ]
         },
         options: {
-            responsive         : true,
+            responsive: true,
             maintainAspectRatio: false,
-            interaction        : { mode: 'index', intersect: false },
+            interaction: { mode: "index", intersect: false },
             plugins: {
                 legend: {
-                    position: 'top',
-                    labels  : { usePointStyle: true, padding: 20, font: { size: 12, family: 'DM Sans' } }
+                    position: "top",
+                    labels: { usePointStyle: true, padding: 20, font: { size: 12, family: "DM Sans" } }
                 },
                 tooltip: {
-                    backgroundColor: '#1E293B',
-                    titleColor     : '#94A3B8',
-                    bodyColor      : '#F8FAFC',
-                    padding        : 12,
-                    cornerRadius   : 8,
-                    callbacks      : {
-                        label: ctx => ctx.dataset.label === 'Feeds Dispensed'
-                            ? `  ${ctx.parsed.y} feed${ctx.parsed.y !== 1 ? 's' : ''}`
-                            : `  ${ctx.parsed.y}g dispensed`
+                    backgroundColor: "#1E293B",
+                    titleColor: "#94A3B8",
+                    bodyColor: "#F8FAFC",
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label === "Feeds Dispensed"
+                                ? "  " + ctx.parsed.y + " feed" + (ctx.parsed.y !== 1 ? "s" : "")
+                                : "  " + ctx.parsed.y + "g dispensed";
+                        }
                     }
                 }
             },
             scales: {
                 yCount: {
-                    type      : 'linear', position: 'left', beginAtZero: true,
-                    ticks     : { stepSize: 1, precision: 0, color: '#63B3ED', font: { size: 11 } },
-                    grid      : { color: '#F1F5F9' },
-                    title     : { display: true, text: 'Feeds', color: '#63B3ED', font: { size: 11 } }
+                    type: "linear", position: "left", beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0, color: "#63B3ED", font: { size: 11 } },
+                    grid: { color: "#F1F5F9" },
+                    title: { display: true, text: "Feeds", color: "#63B3ED", font: { size: 11 } }
                 },
                 yGrams: {
-                    type      : 'linear', position: 'right', beginAtZero: true,
-                    ticks     : { color: '#F39C12', font: { size: 11 }, callback: v => v + 'g' },
-                    grid      : { drawOnChartArea: false },
-                    title     : { display: true, text: 'Grams', color: '#F39C12', font: { size: 11 } }
+                    type: "linear", position: "right", beginAtZero: true,
+                    ticks: { color: "#F39C12", font: { size: 11 }, callback: function(v){ return v + "g"; } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: "Grams", color: "#F39C12", font: { size: 11 } }
                 },
                 x: {
-                    ticks: { color: '#64748B', font: { size: 11 }, maxRotation: 45 },
-                    grid : { display: false }
+                    ticks: { color: "#64748B", font: { size: 11 }, maxRotation: 45 },
+                    grid: { display: false }
                 }
             }
         }
     });
 }
 
-// ─────────────────────────────────────────────
-//  Analytics — Detail Table
-// ─────────────────────────────────────────────
+// ── Detail Table ───────────────────────────────
 function renderDetailTable(entries, colLabel, labelFn) {
-    const tableArea = document.getElementById('an-table-area');
+    var tableArea = document.getElementById("an-table-area");
     if (!tableArea) return;
 
     if (entries.length === 0) {
-        tableArea.innerHTML = '<p style="color:#94A3B8;font-size:13px;padding:16px 0;">No feed data yet.</p>';
+        tableArea.innerHTML = '<p style="color:#94A3B8;font-size:13px;padding:16px 0;">No data yet.</p>';
         return;
     }
 
-    const fmt  = g => (g % 1 === 0) ? g + 'g' : g.toFixed(1) + 'g';
-    const rows = entries.slice().reverse().slice(0, 10).map(e => {
-        const [key, v] = e;
-        return `<tr style="border-bottom:1px solid #F1F5F9;">
-            <td style="padding:10px 14px;font-size:13px;color:#475569;">${labelFn(key)}</td>
-            <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700;color:#00C896;">${v.count}</td>
-            <td style="padding:10px 14px;text-align:center;font-size:13px;color:#94A3B8;">${fmt(v.grams)}</td>
-        </tr>`;
-    }).join('');
+    var reversed = entries.slice().reverse();
+    var rows = reversed.slice(0, 10).map(function(e) {
+        var key = e[0]; var v = e[1];
+        var fmt = function(g){ return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; };
+        return '<tr style="border-bottom:1px solid #F1F5F9;">' +
+            '<td style="padding:10px 14px;font-size:13px;color:#475569;">' + labelFn(key) + '</td>' +
+            '<td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700;color:#00C896;">' + v.count + '</td>' +
+            '<td style="padding:10px 14px;text-align:center;font-size:13px;color:#94A3B8;">' + fmt(v.grams) + '</td>' +
+            '</tr>';
+    }).join("");
 
-    tableArea.innerHTML = `
-        <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            <thead>
-                <tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;">
-                    <th style="padding:10px 14px;text-align:left;color:#64748B;font-weight:600;">${colLabel}</th>
-                    <th style="padding:10px 14px;text-align:center;color:#00C896;font-weight:600;">Feeds</th>
-                    <th style="padding:10px 14px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>
-                </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-        </table>`;
+    tableArea.innerHTML =
+        '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
+        '<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;">' +
+        '<th style="padding:10px 14px;text-align:left;color:#64748B;font-weight:600;">' + colLabel + '</th>' +
+        '<th style="padding:10px 14px;text-align:center;color:#00C896;font-weight:600;">Feeds</th>' +
+        '<th style="padding:10px 14px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
