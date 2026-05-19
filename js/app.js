@@ -629,12 +629,16 @@ function renderLogsGrouped(data) {
     const logsArray = Object.entries(data)
     .map(([key, val]) => ({ ...val, _key: key }));
 
+    logsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
  
   
     // Group by date label
     const grouped = {};
     logsArray.forEach(log => {
-        const d = new Date(log.timestamp || Date.now());
+        const d = log.timestamp
+    ? new Date(log.timestamp)
+    : new Date();
         const label = d.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
         if (!grouped[label]) grouped[label] = [];
         grouped[label].push(log);
@@ -661,7 +665,11 @@ function renderLogsGrouped(data) {
             const iconClass = log.type === 'warning' ? 'fas fa-exclamation-triangle'
                             : log.type === 'error'   ? 'fas fa-times-circle'
                             : 'fas fa-check-circle';
-            const timeStr = log.time || new Date(log.timestamp).toLocaleTimeString();
+            const timeStr = log.time || (
+    log.timestamp
+        ? new Date(log.timestamp).toLocaleTimeString()
+        : '--:--:--'
+);
 
             const dashLi = `
                 <li style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:10px;">
@@ -804,18 +812,20 @@ function renderAnalytics(logsArray) {
         if (grams <= 0) return;
 
         // Fake grouping without timestamp
-        const fakeDate = new Date();
+       const logDate = log.timestamp
+    ? new Date(log.timestamp)
+    : new Date();
 
-        fakeDate.setDate(fakeDate.getDate() - index);
+const dayKey = logDate.toISOString().slice(0, 10);
 
-        const dayKey = fakeDate.toISOString().slice(0, 10);
+const weekKey = getWeekKey(logDate);
 
-        const weekKey = getWeekKey(fakeDate);
+const monthKey =
+    logDate.getFullYear() +
+    "-" +
+    String(logDate.getMonth() + 1).padStart(2, "0");
 
-        const monthKey =
-            fakeDate.getFullYear() +
-            "-" +
-            String(fakeDate.getMonth() + 1).padStart(2, "0");
+        
 
         if (!byDay[dayKey]) {
             byDay[dayKey] = { count: 0, grams: 0 };
