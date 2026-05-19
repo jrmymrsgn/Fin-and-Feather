@@ -207,10 +207,15 @@ function initializeRealtimeListeners() {
         computeNextFeeding(data);
     }, err => console.error('Schedule listener error:', err));
 
-    // Logs (latest 50)
-    feederRef.child('logs').orderByChild('timestamp').limitToLast(50).on('value', snap => {
+    // Logs — fetch latest 50, sort client-side (avoids requiring a Firebase index)
+    feederRef.child('logs').limitToLast(50).on('value', snap => {
         renderLogsGrouped(snap.val());
-    }, err => console.error('Logs listener error:', err));
+    }, err => {
+        console.error('Logs listener error:', err);
+        if (logsListEl) logsListEl.innerHTML = '<li>Failed to load logs. Please refresh.</li>';
+        const fullLogsEl = document.getElementById('full-logs-list');
+        if (fullLogsEl) fullLogsEl.innerHTML = '<li>Failed to load logs. Please refresh.</li>';
+    });
 
     // Settings
     feederRef.child('settings').on('value', snap => {
@@ -603,9 +608,11 @@ function renderLogsGrouped(data) {
         return;
     }
 
+    // Sort client-side: newest first (no Firebase index required)
     const logsArray = Object.entries(data)
         .map(([key, val]) => ({ ...val, _key: key }))
-        .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // newest first
+        .filter(log => log.timestamp)                              // skip malformed entries
+        .sort((a, b) => b.timestamp - a.timestamp);               // newest first
 
     // Group by date label
     const grouped = {};
@@ -675,6 +682,9 @@ function renderLogsGrouped(data) {
     if (refillCount === 0 && refillListEl) {
         refillListEl.innerHTML = emptyRefillMsg;
     }
+
+    // Re-render analytics whenever logs update
+    renderAnalytics(logsArray);
 }
 
 // ─────────────────────────────────────────────
@@ -698,4 +708,139 @@ function showError(msg) {
     } else {
         console.warn('Dashboard error:', msg);
     }
+}
+
+// ─────────────────────────────────────────────
+//  Analytics — Grams Dispensed per Day & Week
+//  Reads grams from log messages, e.g.:
+//  "Dispensed 50g", "Fed 30g", "50g dispensed"
+// ─────────────────────────────────────────────
+function extractGrams(message) {
+    if (!message) return 0;
+    const match = message.match(/(\d+(\.\d+)?)\s*g\b/i);
+    return match ? parseFloat(match[1]) : 0;
+}
+
+function getWeekKey(date) {
+    const d   = new Date(date);
+    const day = d.getDay() || 7;
+    d.setDate(d.getDate() + 4 - day);
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+    return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+function renderAnalytics(logsArray) {
+    const container = document.getElementById('analytics-container');
+    if (!container) return;
+
+    if (!logsArray || logsArray.length === 0) {
+        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px;">No log data available for analysis.</p>';
+        return;
+    }
+
+    // ── Aggregate by day and week ──────────────
+    const byDay  = {};
+    const byWeek = {};
+
+    logsArray.forEach(log => {
+        const grams = extractGrams(log.message);
+        if (grams <= 0) return;
+
+        const d       = new Date(log.timestamp);
+        const dayKey  = d.toISOString().slice(0, 10);
+        const weekKey = getWeekKey(d);
+
+        byDay[dayKey]   = (byDay[dayKey]   || 0) + grams;
+        byWeek[weekKey] = (byWeek[weekKey] || 0) + grams;
+    });
+
+    const dayEntries  = Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0]));
+    const weekEntries = Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0]));
+
+    if (dayEntries.length === 0) {
+        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px;">No gram data found in logs yet. Gram amounts are read from messages like "Dispensed 50g".</p>';
+        return;
+    }
+
+    // ── Summary stats ──────────────────────────
+    const totalEver     = dayEntries.reduce((s, [, g]) => s + g, 0);
+    const avgPerDay     = totalEver / dayEntries.length;
+    const todayKey      = new Date().toISOString().slice(0, 10);
+    const todayGrams    = byDay[todayKey]          || 0;
+    const thisWeekKey   = getWeekKey(new Date());
+    const thisWeekGrams = byWeek[thisWeekKey]      || 0;
+    const maxDay        = Math.max(...dayEntries.map(([, g]) => g), 1);
+    const maxWeek       = Math.max(...weekEntries.map(([, g]) => g), 1);
+
+    function fmt(g) {
+        return g % 1 === 0 ? g + 'g' : g.toFixed(1) + 'g';
+    }
+
+    function fmtDay(isoKey) {
+        const d = new Date(isoKey + 'T00:00:00');
+        const label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        return isoKey === todayKey
+            ? `<strong>Today</strong> <span style="color:#aaa;font-size:11px;">${label}</span>`
+            : label;
+    }
+
+    function barRow(label, grams, max, accent) {
+        const pct    = Math.round((grams / max) * 100);
+        const isZero = grams === 0;
+        return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+            <div style="width:130px;font-size:13px;color:#555;flex-shrink:0;text-align:right;">${label}</div>
+            <div style="flex:1;background:#f0f0f0;border-radius:6px;height:22px;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:${accent};border-radius:6px;
+                    transition:width .4s ease;min-width:${isZero ? 0 : 4}px;"></div>
+            </div>
+            <div style="width:68px;font-size:13px;font-weight:600;color:#333;flex-shrink:0;">
+                ${isZero ? '—' : fmt(grams)}
+            </div>
+        </div>`;
+    }
+
+    function statCard(label, value, sub, color) {
+        return `
+        <div style="flex:1;min-width:120px;background:#fff;border:1px solid #e8e8e8;
+            border-radius:10px;padding:14px 16px;text-align:center;">
+            <div style="font-size:22px;font-weight:700;color:${color};">${value}</div>
+            <div style="font-size:12px;font-weight:600;color:#555;margin:4px 0 2px;">${label}</div>
+            <div style="font-size:11px;color:#aaa;">${sub}</div>
+        </div>`;
+    }
+
+    container.innerHTML = `
+
+        <!-- Summary stat cards -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;">
+            ${statCard('Today',      fmt(todayGrams),    new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}), '#2EBA8A')}
+            ${statCard('This Week',  fmt(thisWeekGrams), thisWeekKey,                                                            '#3498DB')}
+            ${statCard('Avg / Day',  fmt(avgPerDay),     'across ' + dayEntries.length  + ' day(s)',                            '#9B59B6')}
+            ${statCard('Total Ever', fmt(totalEver),     dayEntries.length + ' day(s) of data',                                 '#F39C12')}
+        </div>
+
+        <!-- Daily bar chart -->
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;
+            padding:18px 20px;margin-bottom:18px;">
+            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:16px;">
+                <i class="fas fa-calendar-day" style="color:#2EBA8A;margin-right:8px;"></i>
+                Daily Dispensed <span style="font-weight:400;color:#aaa;font-size:12px;">(last ${Math.min(dayEntries.length, 14)} days)</span>
+            </div>
+            ${dayEntries.slice(0, 14).map(([key, g]) => barRow(fmtDay(key), g, maxDay, '#2EBA8A')).join('')}
+        </div>
+
+        <!-- Weekly bar chart -->
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;
+            padding:18px 20px;">
+            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:16px;">
+                <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:8px;"></i>
+                Weekly Dispensed <span style="font-weight:400;color:#aaa;font-size:12px;">(last ${Math.min(weekEntries.length, 8)} weeks)</span>
+            </div>
+            ${weekEntries.slice(0, 8).map(([key, g]) => {
+                const [yr, wk] = key.split('-W');
+                return barRow('Week ' + wk + ', ' + yr, g, maxWeek, '#3498DB');
+            }).join('')}
+        </div>`;
 }
