@@ -735,112 +735,140 @@ function renderAnalytics(logsArray) {
     if (!container) return;
 
     if (!logsArray || logsArray.length === 0) {
-        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px;">No log data available for analysis.</p>';
+        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px 0;">No log data available yet.</p>';
         return;
     }
 
-    // ── Aggregate by day and week ──────────────
-    const byDay  = {};
-    const byWeek = {};
+    // ── Identify dispense logs & aggregate ────────
+    // A "dispense" log is any log that contains a gram value
+    const byDay  = {};  // { "YYYY-MM-DD": { count, grams } }
+    const byWeek = {};  // { "YYYY-Www":   { count, grams } }
 
     logsArray.forEach(log => {
         const grams = extractGrams(log.message);
-        if (grams <= 0) return;
+        if (grams <= 0) return;                       // skip non-dispense logs
 
         const d       = new Date(log.timestamp);
         const dayKey  = d.toISOString().slice(0, 10);
         const weekKey = getWeekKey(d);
 
-        byDay[dayKey]   = (byDay[dayKey]   || 0) + grams;
-        byWeek[weekKey] = (byWeek[weekKey] || 0) + grams;
+        if (!byDay[dayKey])   byDay[dayKey]   = { count: 0, grams: 0 };
+        if (!byWeek[weekKey]) byWeek[weekKey] = { count: 0, grams: 0 };
+
+        byDay[dayKey].count++;
+        byDay[dayKey].grams  += grams;
+        byWeek[weekKey].count++;
+        byWeek[weekKey].grams += grams;
     });
 
     const dayEntries  = Object.entries(byDay).sort((a, b) => b[0].localeCompare(a[0]));
     const weekEntries = Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0]));
 
     if (dayEntries.length === 0) {
-        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px;">No gram data found in logs yet. Gram amounts are read from messages like "Dispensed 50g".</p>';
+        container.innerHTML = '<p style="color:#888;font-size:14px;padding:16px 0;">No dispense logs found yet. Feed counts appear here automatically when the feeder dispenses.</p>';
         return;
     }
 
-    // ── Summary stats ──────────────────────────
-    const totalEver     = dayEntries.reduce((s, [, g]) => s + g, 0);
-    const avgPerDay     = totalEver / dayEntries.length;
-    const todayKey      = new Date().toISOString().slice(0, 10);
-    const todayGrams    = byDay[todayKey]          || 0;
-    const thisWeekKey   = getWeekKey(new Date());
-    const thisWeekGrams = byWeek[thisWeekKey]      || 0;
-    const maxDay        = Math.max(...dayEntries.map(([, g]) => g), 1);
-    const maxWeek       = Math.max(...weekEntries.map(([, g]) => g), 1);
+    // ── Summary totals ─────────────────────────────
+    const todayKey        = new Date().toISOString().slice(0, 10);
+    const thisWeekKey     = getWeekKey(new Date());
 
-    function fmt(g) {
-        return g % 1 === 0 ? g + 'g' : g.toFixed(1) + 'g';
-    }
+    const todayCount      = byDay[todayKey]?.count      || 0;
+    const todayGrams      = byDay[todayKey]?.grams      || 0;
+    const thisWeekCount   = byWeek[thisWeekKey]?.count  || 0;
+    const thisWeekGrams   = byWeek[thisWeekKey]?.grams  || 0;
+    const totalCount      = dayEntries.reduce((s, [, v]) => s + v.count, 0);
+    const totalGrams      = dayEntries.reduce((s, [, v]) => s + v.grams, 0);
+    const avgCountPerDay  = (totalCount / dayEntries.length).toFixed(1);
+    const avgGramsPerDay  = (totalGrams / dayEntries.length).toFixed(1);
 
-    function fmtDay(isoKey) {
+    const maxDayCount  = Math.max(...dayEntries.map(([, v]) => v.count), 1);
+    const maxWeekCount = Math.max(...weekEntries.map(([, v]) => v.count), 1);
+
+    // ── Helpers ────────────────────────────────────
+    function fmtG(g)  { return g % 1 === 0 ? g + 'g' : g.toFixed(1) + 'g'; }
+
+    function fmtDayLabel(isoKey) {
         const d = new Date(isoKey + 'T00:00:00');
-        const label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const s = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
         return isoKey === todayKey
-            ? `<strong>Today</strong> <span style="color:#aaa;font-size:11px;">${label}</span>`
-            : label;
+            ? `<strong style="color:#2EBA8A;">Today</strong> <span style="color:#bbb;font-size:11px;">${s}</span>`
+            : `<span style="color:#555;">${s}</span>`;
     }
 
-    function barRow(label, grams, max, accent) {
-        const pct    = Math.round((grams / max) * 100);
-        const isZero = grams === 0;
+    function statCard(icon, label, mainVal, sub, color) {
         return `
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            <div style="width:130px;font-size:13px;color:#555;flex-shrink:0;text-align:right;">${label}</div>
-            <div style="flex:1;background:#f0f0f0;border-radius:6px;height:22px;overflow:hidden;">
+        <div style="flex:1;min-width:130px;background:#fff;border:1px solid #e8e8e8;
+            border-radius:12px;padding:16px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+            <div style="font-size:13px;color:#aaa;margin-bottom:6px;">
+                <i class="${icon}" style="color:${color};margin-right:5px;"></i>${label}
+            </div>
+            <div style="font-size:26px;font-weight:700;color:${color};line-height:1.1;">${mainVal}</div>
+            <div style="font-size:11px;color:#bbb;margin-top:4px;">${sub}</div>
+        </div>`;
+    }
+
+    function barRow(labelHTML, count, grams, max, accent) {
+        const pct = Math.round((count / max) * 100);
+        return `
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div style="width:140px;font-size:12px;flex-shrink:0;text-align:right;line-height:1.4;">
+                ${labelHTML}
+            </div>
+            <div style="flex:1;background:#f3f3f3;border-radius:6px;height:24px;overflow:hidden;position:relative;">
                 <div style="width:${pct}%;height:100%;background:${accent};border-radius:6px;
-                    transition:width .4s ease;min-width:${isZero ? 0 : 4}px;"></div>
+                    transition:width .5s ease;min-width:${count > 0 ? 4 : 0}px;"></div>
             </div>
-            <div style="width:68px;font-size:13px;font-weight:600;color:#333;flex-shrink:0;">
-                ${isZero ? '—' : fmt(grams)}
+            <div style="width:90px;font-size:12px;font-weight:600;color:#333;flex-shrink:0;line-height:1.4;">
+                <span style="color:${accent};font-size:15px;">${count}</span>
+                <span style="color:#aaa;font-size:10px;font-weight:400;"> feed${count !== 1 ? 's' : ''}</span><br>
+                <span style="color:#bbb;font-size:10px;">${fmtG(grams)}</span>
             </div>
         </div>`;
     }
 
-    function statCard(label, value, sub, color) {
-        return `
-        <div style="flex:1;min-width:120px;background:#fff;border:1px solid #e8e8e8;
-            border-radius:10px;padding:14px 16px;text-align:center;">
-            <div style="font-size:22px;font-weight:700;color:${color};">${value}</div>
-            <div style="font-size:12px;font-weight:600;color:#555;margin:4px 0 2px;">${label}</div>
-            <div style="font-size:11px;color:#aaa;">${sub}</div>
-        </div>`;
-    }
-
+    // ── Render ─────────────────────────────────────
     container.innerHTML = `
 
-        <!-- Summary stat cards -->
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;">
-            ${statCard('Today',      fmt(todayGrams),    new Date().toLocaleDateString(undefined,{month:'short',day:'numeric'}), '#2EBA8A')}
-            ${statCard('This Week',  fmt(thisWeekGrams), thisWeekKey,                                                            '#3498DB')}
-            ${statCard('Avg / Day',  fmt(avgPerDay),     'across ' + dayEntries.length  + ' day(s)',                            '#9B59B6')}
-            ${statCard('Total Ever', fmt(totalEver),     dayEntries.length + ' day(s) of data',                                 '#F39C12')}
+        <!-- 4 stat cards -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+            ${statCard('fas fa-sun',        'Today',        todayCount    + ' feeds', fmtG(todayGrams)    + ' dispensed',                    '#2EBA8A')}
+            ${statCard('fas fa-calendar-week','This Week',  thisWeekCount + ' feeds', fmtG(thisWeekGrams) + ' dispensed',                    '#3498DB')}
+            ${statCard('fas fa-chart-line',  'Avg / Day',   avgCountPerDay + ' feeds','~' + fmtG(+avgGramsPerDay) + ' per day',              '#9B59B6')}
+            ${statCard('fas fa-history',     'All Time',    totalCount    + ' feeds', fmtG(totalGrams)    + ' total · ' + dayEntries.length + 'd', '#F39C12')}
         </div>
 
-        <!-- Daily bar chart -->
-        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;
-            padding:18px 20px;margin-bottom:18px;">
-            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:16px;">
-                <i class="fas fa-calendar-day" style="color:#2EBA8A;margin-right:8px;"></i>
-                Daily Dispensed <span style="font-weight:400;color:#aaa;font-size:12px;">(last ${Math.min(dayEntries.length, 14)} days)</span>
+        <!-- Daily feed count chart -->
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;
+            padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
+                <span>
+                    <i class="fas fa-calendar-day" style="color:#2EBA8A;margin-right:8px;"></i>
+                    Feeds Dispensed — Daily
+                </span>
+                <span style="font-size:11px;font-weight:400;color:#bbb;">last ${Math.min(dayEntries.length, 14)} days</span>
             </div>
-            ${dayEntries.slice(0, 14).map(([key, g]) => barRow(fmtDay(key), g, maxDay, '#2EBA8A')).join('')}
+            ${dayEntries.slice(0, 14).map(([key, v]) =>
+                barRow(fmtDayLabel(key), v.count, v.grams, maxDayCount, '#2EBA8A')
+            ).join('')}
         </div>
 
-        <!-- Weekly bar chart -->
-        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:10px;
-            padding:18px 20px;">
-            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:16px;">
-                <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:8px;"></i>
-                Weekly Dispensed <span style="font-weight:400;color:#aaa;font-size:12px;">(last ${Math.min(weekEntries.length, 8)} weeks)</span>
+        <!-- Weekly feed count chart -->
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;
+            padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+            <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;">
+                <span>
+                    <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:8px;"></i>
+                    Feeds Dispensed — Weekly
+                </span>
+                <span style="font-size:11px;font-weight:400;color:#bbb;">last ${Math.min(weekEntries.length, 8)} weeks</span>
             </div>
-            ${weekEntries.slice(0, 8).map(([key, g]) => {
+            ${weekEntries.slice(0, 8).map(([key, v]) => {
                 const [yr, wk] = key.split('-W');
-                return barRow('Week ' + wk + ', ' + yr, g, maxWeek, '#3498DB');
+                return barRow(
+                    `<span style="color:#555;">Week ${wk}</span> <span style="color:#bbb;font-size:11px;">${yr}</span>`,
+                    v.count, v.grams, maxWeekCount, '#3498DB'
+                );
             }).join('')}
         </div>`;
 }
