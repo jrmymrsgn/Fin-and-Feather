@@ -626,12 +626,8 @@ function renderLogsGrouped(data) {
         return;
     }
 
-    // Sort client-side: newest first (no Firebase index required)
-    const logsArray = Object.entries(data)
-        .map(([key, val]) => ({ ...val, _key: key }))
-        .filter(log => log.timestamp)                              // skip malformed entries
-        .sort((a, b) => b.timestamp - a.timestamp);               // newest first
-
+ 
+  
     // Group by date label
     const grouped = {};
     logsArray.forEach(log => {
@@ -800,7 +796,7 @@ function renderAnalytics(logsArray) {
         var grams = extractGrams(log.message);
         if (grams <= 0) return;
 
-        var d        = new Date(log.timestamp);
+        var d = new Date(log.timestamp || Date.now());
         var dayKey   = d.toISOString().slice(0, 10);
         var weekKey  = getWeekKey(d);
         var monthKey = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
