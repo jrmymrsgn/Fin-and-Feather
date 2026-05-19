@@ -794,18 +794,28 @@ function initAnalyticsTabs() {
 
 function renderAnalytics(logsArray) {
 
-    window._lastLogsArray = logsArray;
+    window._lastLogsArray = logsArray || [];
 
     const container = document.getElementById("analytics-container");
 
-    if (!container) return;
+    // Prevent loading crash
+    if (!container) {
+        console.log("Analytics container not found");
+        return;
+    }
+
+    // Prevent Chart.js crash
+    if (typeof Chart === "undefined") {
+        console.log("Chart.js not loaded yet");
+        return;
+    }
 
     const byDay = {};
     const byWeek = {};
     const byMonth = {};
 
     // ONLY USE MESSAGE GRAMS
-    (logsArray || []).forEach((log, index) => {
+    (logsArray || []).forEach((log) => {
 
         const grams = extractGrams(log.message);
 
