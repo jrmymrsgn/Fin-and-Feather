@@ -4,14 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fin & Feather Feeding System</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="app-container">
+        <!-- Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
+        
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Fin & Feather</h2>
@@ -25,14 +30,15 @@
                     <li class="nav-item" data-target="inventory"><a href="#"><i class="fas fa-boxes"></i> Inventory</a></li>
                     <li class="nav-item" data-target="analysis"><a href="#"><i class="fas fa-chart-line"></i> Analysis</a></li>
                     <li class="nav-item" data-target="settings"><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li style="margin-top:50px;"><a href="#" id="btn-logout" style="color:#E74C3C;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li style="margin-top: 50px;"><a href="#" id="btn-logout" style="color: #E74C3C;"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="header-title" style="display:flex;align-items:center;gap:15px;">
+                <div class="header-title" style="display: flex; align-items: center; gap: 15px;">
                     <button id="mobile-menu-btn" class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
                     <h1 id="page-title">Admin Dashboard</h1>
                 </div>
@@ -43,69 +49,79 @@
                 </div>
             </header>
 
+            <!-- Page Sections Container -->
             <div id="pages-container">
-
-                <!-- ── Dashboard ── -->
+                <!-- Dashboard Section -->
                 <div id="section-dashboard" class="page-section active-section">
-                    <section class="status-cards">
-                        <div class="card feed-level-card">
-                            <div class="card-header">Feed Level</div>
-                            <div class="card-body">
-                                <div class="level-value"><span id="feed-percentage">--</span>%</div>
-                                <div class="level-status" id="feed-status-text">Loading...</div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" id="feed-progress-bar" style="width:0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card last-feeding-card">
-                            <div class="card-header">Last Feeding</div>
-                            <div class="card-body">
-                                <div class="time-value" id="last-feeding-time">--:-- --</div>
-                                <div class="info-text"><span id="last-feeding-amount">--</span> g dispensed</div>
-                            </div>
-                        </div>
-                        <div class="card next-feeding-card">
-                            <div class="card-header">Next Feeding</div>
-                            <div class="card-body">
-                                <div class="time-value" id="next-feeding-time">--:-- --</div>
-                                <div class="info-text"><span id="next-feeding-countdown">--h --m</span></div>
-                            </div>
-                        </div>
-                    </section>
 
-                    <section class="details-section">
-                        <div class="card schedule-card">
-                            <div class="card-header border-bottom"><h3>Weekly Schedule</h3></div>
-                            <div class="card-body p-0">
-                                <ul class="schedule-list" id="schedule-list">
-                                    <li><i class="far fa-calendar-check schedule-icon"></i> Loading schedule...</li>
-                                </ul>
-                            </div>
+            <!-- Status Cards -->
+            <section class="status-cards">
+                <div class="card feed-level-card">
+                    <div class="card-header">Feed Level</div>
+                    <div class="card-body">
+                        <div class="level-value"><span id="feed-percentage">--</span>%</div>
+                        <div class="level-status" id="feed-status-text">Loading...</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="feed-progress-bar" style="width: 0%;"></div>
                         </div>
-                        <div class="card logs-card">
-                            <div class="card-header border-bottom d-flex-between">
-                                <h3>Recent Logs</h3>
-                                <button class="btn-add" id="btn-manual-feed"><i class="fas fa-plus"></i> Feed Now</button>
-                            </div>
-                            <div class="card-body p-0">
-                                <ul class="logs-list" id="logs-list">
-                                    <li>Loading logs...</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
+                    </div>
+                </div>
+                <div class="card last-feeding-card">
+                    <div class="card-header">Last Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="last-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="last-feeding-amount">--</span> g dispensed</div>
+                    </div>
+                </div>
+                <div class="card next-feeding-card">
+                    <div class="card-header">Next Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="next-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="next-feeding-countdown">--h --m</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Section (Schedule & Logs) -->
+            <section class="details-section">
+                <!-- Weekly Schedule -->
+                <div class="card schedule-card">
+                    <div class="card-header border-bottom">
+                        <h3>Weekly Schedule</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="schedule-list" id="schedule-list">
+                            <li><i class="far fa-calendar-check schedule-icon"></i> Loading schedule...</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- ── Schedule ── -->
-                <div id="section-schedule" class="page-section" style="display:none;">
-                    <div class="card" style="margin-bottom:20px;">
-                        <div class="card-header border-bottom"><h3>Add New Feeding Schedule</h3></div>
+                <!-- Recent Logs -->
+                <div class="card logs-card">
+                    <div class="card-header border-bottom d-flex-between">
+                        <h3>Recent Logs</h3>
+                        <button class="btn-add" id="btn-manual-feed"><i class="fas fa-plus"></i> Feed Now</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="logs-list" id="logs-list">
+                            <li>Loading logs...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+                </div> <!-- End Dashboard Section -->
+
+                <!-- Schedule Section -->
+                <div id="section-schedule" class="page-section" style="display: none;">
+                    <div class="card" style="margin-bottom: 20px;">
+                        <div class="card-header border-bottom">
+                            <h3>Add New Feeding Schedule</h3>
+                        </div>
                         <div class="card-body">
                             <form id="schedule-form">
-                                <div style="margin-bottom:15px;">
-                                    <label style="font-weight:bold;display:block;margin-bottom:5px;">Select Days:</label>
-                                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Select Days:</label>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                         <label><input type="checkbox" name="days" value="Mon"> Mon</label>
                                         <label><input type="checkbox" name="days" value="Tue"> Tue</label>
                                         <label><input type="checkbox" name="days" value="Wed"> Wed</label>
@@ -115,9 +131,9 @@
                                         <label><input type="checkbox" name="days" value="Sun"> Sun</label>
                                     </div>
                                 </div>
-                                <div style="margin-bottom:15px;">
-                                    <label style="font-weight:bold;display:block;margin-bottom:5px;">How many times to feed (per selected day)?</label>
-                                    <select id="schedule-times-count" style="padding:8px;border:1px solid #ccc;border-radius:4px;width:100%;max-width:200px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">How many times to feed (per selected day)?</label>
+                                    <select id="schedule-times-count" style="padding:8px; border:1px solid #ccc; border-radius:4px; width:100%; max-width:200px;">
                                         <option value="1" selected>1 Time</option>
                                         <option value="2">2 Times</option>
                                         <option value="3">3 Times</option>
@@ -125,32 +141,36 @@
                                         <option value="5">5 Times</option>
                                     </select>
                                 </div>
-                                <div id="dynamic-time-inputs" style="margin-bottom:15px;display:flex;flex-direction:column;gap:10px;">
+                                <div id="dynamic-time-inputs" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
                                     <div>
-                                        <label style="display:inline-block;width:60px;">Time 1:</label>
-                                        <input type="time" class="schedule-time-input" required style="padding:8px;border:1px solid #ccc;border-radius:4px;">
+                                        <label style="display:inline-block; width: 60px;">Time 1:</label>
+                                        <input type="time" class="schedule-time-input" required style="padding:8px; border:1px solid #ccc; border-radius:4px;">
                                     </div>
                                 </div>
-                                <div style="margin-bottom:15px;">
-                                    <label style="font-weight:bold;display:block;margin-bottom:5px;">Amount (grams):</label>
-                                    <input type="number" id="schedule-amount" value="250" required style="padding:8px;border:1px solid #ccc;border-radius:4px;">
+                                <div style="margin-bottom: 15px;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">Amount (grams):</label>
+                                    <input type="number" id="schedule-amount" value="250" required style="padding:8px; border:1px solid #ccc; border-radius:4px;">
                                 </div>
                                 <button type="submit" class="btn-add">Save Schedule</button>
                             </form>
                         </div>
                     </div>
+                    
                     <div class="card">
-                        <div class="card-header border-bottom"><h3>Current Schedules</h3></div>
+                        <div class="card-header border-bottom">
+                            <h3>Current Schedules</h3>
+                        </div>
                         <div class="card-body p-0">
                             <ul class="schedule-list" id="full-schedule-list">
+                                <!-- Will be hydrated by JS -->
                                 <li>Loading schedules...</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Logs ── -->
-                <div id="section-logs" class="page-section" style="display:none;">
+                <!-- Logs Section -->
+                <div id="section-logs" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom d-flex-between">
                             <h3>Full Feeding System Logs</h3>
@@ -160,186 +180,137 @@
                         </div>
                         <div class="card-body p-0">
                             <ul class="logs-list" id="full-logs-list">
+                                <!-- Will be hydrated by JS -->
                                 <li>Loading historical logs...</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Edit Schedule Modal ── -->
-                <div id="edit-schedule-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
-                    <div style="background:#fff;border-radius:12px;padding:30px;width:90%;max-width:420px;box-shadow:0 10px 30px rgba(0,0,0,0.2);">
-                        <h3 style="margin-top:0;margin-bottom:20px;">Edit Schedule Entry</h3>
+                <!-- Edit Schedule Modal -->
+                <div id="edit-schedule-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:12px; padding:30px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
+                        <h3 style="margin-top:0; margin-bottom:20px;">Edit Schedule Entry</h3>
                         <input type="hidden" id="edit-schedule-key">
                         <div style="margin-bottom:15px;">
-                            <label style="font-weight:bold;display:block;margin-bottom:5px;">Day</label>
-                            <input type="text" id="edit-schedule-day" readonly style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;background:#f5f5f5;box-sizing:border-box;">
+                            <label style="font-weight:bold; display:block; margin-bottom:5px;">Day</label>
+                            <input type="text" id="edit-schedule-day" readonly
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; background:#f5f5f5; box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:15px;">
-                            <label style="font-weight:bold;display:block;margin-bottom:5px;">New Time</label>
-                            <input type="time" id="edit-schedule-time" style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;">
+                            <label style="font-weight:bold; display:block; margin-bottom:5px;">New Time</label>
+                            <input type="time" id="edit-schedule-time"
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:20px;">
-                            <label style="font-weight:bold;display:block;margin-bottom:5px;">Amount (grams)</label>
-                            <input type="number" id="edit-schedule-amount" style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;box-sizing:border-box;">
+                            <label style="font-weight:bold; display:block; margin-bottom:5px;">Amount (grams)</label>
+                            <input type="number" id="edit-schedule-amount"
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
                         </div>
-                        <div style="display:flex;gap:10px;justify-content:flex-end;">
-                            <button id="btn-edit-schedule-cancel" style="padding:10px 20px;border:1px solid #ccc;background:#fff;border-radius:6px;cursor:pointer;">Cancel</button>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button id="btn-edit-schedule-cancel" style="padding:10px 20px; border:1px solid #ccc; background:#fff; border-radius:6px; cursor:pointer;">Cancel</button>
                             <button id="btn-edit-schedule-save" class="btn-add" style="padding:10px 20px;">Save Changes</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Inventory ── -->
-                <div id="section-inventory" class="page-section" style="display:none;">
+                <!-- Inventory Section -->
+                <div id="section-inventory" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom d-flex-between">
                             <h3>Stock Inventory</h3>
-                            <button id="btn-mark-refilled" class="btn-add" style="background-color:var(--color-feed-level);"><i class="fas fa-sync"></i> Mark Refilled</button>
+                            <button id="btn-mark-refilled" class="btn-add" style="background-color: var(--color-feed-level);"><i class="fas fa-sync"></i> Mark Refilled</button>
                         </div>
                         <div class="card-body">
                             <p>Current Feed Available: <strong id="inv-level">--</strong></p>
                             <p>Threshold for alert: <strong>20%</strong></p>
-                            <hr style="margin:20px 0;border:none;border-bottom:1px solid #eee;">
+                            <hr style="margin:20px 0; border:none; border-bottom:1px solid #eee;">
                             <h4>Refill History</h4>
                             <ul class="logs-list" id="refill-history-list" style="margin-top:10px;">
-                                <li style="color:#888;font-size:14px;">Loading refill history...</li>
+                                <li style="color:#888; font-size:14px;">Loading refill history...</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Analysis ── -->
-                <div id="section-analysis" class="page-section" style="display:none;">
+                <!-- Analysis Section -->
+<div id="section-analysis" class="page-section" style="display: none;">
+    <div class="card">
+        <div class="card-header border-bottom">
+            <h3>Feed Analysis Graph</h3>
+        </div>
 
-                    <!-- Stat Cards -->
-                    <section class="status-cards" style="margin-bottom:20px;">
-                        <div class="card" style="text-align:center;padding:20px;">
-                            <div style="font-size:13px;color:#aaa;margin-bottom:6px;">
-                                <i class="fas fa-sun" style="color:#2EBA8A;margin-right:5px;"></i> Today
-                            </div>
-                            <div style="font-size:32px;font-weight:700;color:#2EBA8A;" id="an-today-count">--</div>
-                            <div style="font-size:12px;color:#555;margin-top:2px;">feeds dispensed</div>
-                            <div style="font-size:12px;color:#bbb;margin-top:2px;" id="an-today-grams">--</div>
-                        </div>
-                        <div class="card" style="text-align:center;padding:20px;">
-                            <div style="font-size:13px;color:#aaa;margin-bottom:6px;">
-                                <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:5px;"></i> This Week
-                            </div>
-                            <div style="font-size:32px;font-weight:700;color:#3498DB;" id="an-week-count">--</div>
-                            <div style="font-size:12px;color:#555;margin-top:2px;">feeds dispensed</div>
-                            <div style="font-size:12px;color:#bbb;margin-top:2px;" id="an-week-grams">--</div>
-                        </div>
-                        <div class="card" style="text-align:center;padding:20px;">
-                            <div style="font-size:13px;color:#aaa;margin-bottom:6px;">
-                                <i class="fas fa-history" style="color:#F39C12;margin-right:5px;"></i> All Time
-                            </div>
-                            <div style="font-size:32px;font-weight:700;color:#F39C12;" id="an-total-count">--</div>
-                            <div style="font-size:12px;color:#555;margin-top:2px;">total feeds</div>
-                            <div style="font-size:12px;color:#bbb;margin-top:2px;">
-                                <span id="total-feed-dispensed">--</span> dispensed
-                            </div>
-                        </div>
-                    </section>
+        <div class="card-body">
+            <div style="height: 400px;">
+                <canvas id="feedChart"></canvas>
+            </div>
 
-                    <!-- Daily Chart -->
-                    <div class="card" style="margin-bottom:20px;">
-                        <div class="card-header border-bottom">
-                            <h3>
-                                <i class="fas fa-chart-bar" style="color:#3498DB;margin-right:8px;"></i>
-                                Daily Feed Count
-                                <span style="font-weight:400;font-size:12px;color:#aaa;margin-left:8px;">last 14 days — updates live</span>
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div style="height:320px;position:relative;">
-                                <canvas id="feedChart"></canvas>
-                            </div>
-                            <div style="margin-top:12px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#aaa;">
-                                <span><span style="display:inline-block;width:12px;height:12px;background:#2EBA8A;border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Today</span>
-                                <span><span style="display:inline-block;width:12px;height:12px;background:rgba(52,152,219,0.75);border-radius:2px;margin-right:5px;vertical-align:middle;"></span>Other days</span>
-                                <span><span style="display:inline-block;width:24px;height:2px;background:#F39C12;margin-right:5px;vertical-align:middle;"></span>Grams (line)</span>
-                            </div>
-                        </div>
-                    </div>
+            <div style="margin-top:20px;">
+                <h4>Total Feed Dispensed</h4>
+                <p style="font-size:20px; font-weight:bold;">
+                    <span id="total-feed-dispensed">0</span> grams
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    <!-- Weekly Table -->
-                    <div class="card">
-                        <div class="card-header border-bottom">
-                            <h3>
-                                <i class="fas fa-table" style="color:#9B59B6;margin-right:8px;"></i>
-                                Weekly Summary
-                            </h3>
-                        </div>
-                        <div class="card-body p-0">
-                            <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                                <thead>
-                                    <tr style="background:#f9f9f9;border-bottom:2px solid #eee;">
-                                        <th style="padding:12px 14px;text-align:left;color:#555;font-weight:600;">Week</th>
-                                        <th style="padding:12px 14px;text-align:center;color:#2EBA8A;font-weight:600;">Feeds</th>
-                                        <th style="padding:12px 14px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="an-week-table-body">
-                                    <tr><td colspan="3" style="color:#aaa;font-size:13px;padding:16px;">Loading...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- ── Settings ── -->
-                <div id="section-settings" class="page-section" style="display:none;">
+                <!-- Settings Section -->
+                <div id="section-settings" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom"><h3>System Configuration</h3></div>
-                        <div class="card-body" style="display:flex;flex-direction:column;gap:15px;">
+                        <div class="card-body" style="display: flex; flex-direction: column; gap: 15px;">
                             <div>
-                                <label style="display:block;font-weight:bold;margin-bottom:5px;">SMS Alerts Phone Number</label>
-                                <input type="text" id="setting-phone" placeholder="Ex: +639123456789" style="padding:10px;width:100%;max-width:300px;border:1px solid #ccc;border-radius:5px;">
+                                <label style="display:block; font-weight:bold; margin-bottom:5px;">SMS Alerts Phone Number</label>
+                                <input type="text" id="setting-phone" placeholder="Ex: +639123456789" style="padding:10px; width:100%; max-width:300px; border:1px solid #ccc; border-radius:5px;">
                             </div>
                             <div>
-                                <label style="font-weight:bold;display:flex;align-items:center;gap:10px;">
+                                <label style="font-weight:bold; display:flex; align-items:center; gap:10px;">
                                     <input type="checkbox" id="setting-sms-enable" checked> Enable SMS Alerts
                                 </label>
                             </div>
-                            <div style="background:var(--color-bg);padding:15px;border-radius:8px;border:1px solid #eee;margin-top:5px;">
-                                <h4 style="margin-top:0;margin-bottom:10px;">Feeder Servo Timing Configuration</h4>
-                                <p style="font-size:13px;color:var(--text-muted);margin-bottom:15px;">Configure the time the servo opens and closes to dispense the correct amount of feed.</p>
-                                <div style="display:flex;gap:20px;flex-wrap:wrap;">
-                                    <div style="flex:1;min-width:200px;">
-                                        <label style="display:block;font-weight:bold;margin-bottom:5px;">Servo Open Time (ms)</label>
-                                        <input type="number" id="setting-servo-open" placeholder="e.g. 500" style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;">
+                            <!-- Servo Timing Configurations -->
+                            <div style="background:var(--color-bg); padding:15px; border-radius:8px; border:1px solid #eee; margin-top:5px;">
+                                <h4 style="margin-top:0; margin-bottom:10px;">Feeder Servo Timing Configuration</h4>
+                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Configure the time the servo opens and closes to dispense the correct amount of feed.</p>
+                                
+                                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Servo Open Time (ms)</label>
+                                        <input type="number" id="setting-servo-open" placeholder="e.g. 500" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
                                     </div>
-                                    <div style="flex:1;min-width:200px;">
-                                        <label style="display:block;font-weight:bold;margin-bottom:5px;">Servo Closed Time (ms)</label>
-                                        <input type="number" id="setting-servo-closed" placeholder="e.g. 1000" style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Servo Closed Time (ms)</label>
+                                        <input type="number" id="setting-servo-closed" placeholder="e.g. 1000" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
                                     </div>
                                 </div>
                             </div>
-                            <div style="background:var(--color-bg);padding:15px;border-radius:8px;border:1px solid #eee;margin-top:5px;">
-                                <h4 style="margin-top:0;margin-bottom:10px;">Hopper Height Configuration</h4>
-                                <p style="font-size:13px;color:var(--text-muted);margin-bottom:15px;">
-                                    Set the <strong>empty hopper height</strong> in centimeters — the distance from the ultrasonic sensor to the bottom of the hopper when completely empty.
+                            <!-- Hopper Height Configuration -->
+                            <div style="background:var(--color-bg); padding:15px; border-radius:8px; border:1px solid #eee; margin-top:5px;">
+                                <h4 style="margin-top:0; margin-bottom:10px;">Hopper Height Configuration</h4>
+                                <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
+                                    Set the <strong>empty hopper height</strong> in centimeters — this is the distance from the ultrasonic sensor 
+                                    down to the bottom of the hopper when it is completely empty. This is used to accurately calculate the feed level percentage.
                                 </p>
-                                <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
-                                    <div style="flex:1;min-width:200px;">
-                                        <label style="display:block;font-weight:bold;margin-bottom:5px;">Empty Hopper Height (cm)</label>
-                                        <input type="number" id="setting-hopper-height" placeholder="e.g. 20" min="5" max="200" style="padding:10px;width:100%;border:1px solid #ccc;border-radius:5px;">
+                                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Empty Hopper Height (cm)</label>
+                                        <input type="number" id="setting-hopper-height" placeholder="e.g. 20" min="5" max="200"
+                                            style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
                                     </div>
-                                    <div style="flex:1;min-width:200px;">
-                                        <p style="font-size:12px;color:#888;margin:0;">
-                                            <i class="fas fa-info-circle"></i> Measure with a ruler from the sensor to the <em>empty</em> hopper floor. Typical range: 10–50 cm.
+                                    <div style="flex:1; min-width:200px;">
+                                        <p style="font-size:12px; color:#888; margin:0;">
+                                            <i class="fas fa-info-circle"></i> Measure with a ruler from the sensor to the <em>empty</em> hopper floor. 
+                                            Typical range: 10–50 cm.
                                         </p>
                                     </div>
                                 </div>
                             </div>
-                            <button id="btn-save-settings" class="btn-add" style="width:150px;margin-top:10px;">Save Settings</button>
+                            <button id="btn-save-settings" class="btn-add" style="width:150px; margin-top:10px;">Save Settings</button>
                         </div>
                     </div>
                 </div>
-
-            </div><!-- end pages-container -->
+            </div> <!-- End Pages Container -->
         </main>
     </div>
 
@@ -347,9 +318,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <!-- Chart.js -->
+    
+    <!-- Custom Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- App -->
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
 </body>
