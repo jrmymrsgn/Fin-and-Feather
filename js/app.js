@@ -763,22 +763,34 @@ var currentAnalysisTab = 'day';
 function switchAnalysisTab(tab) {
     currentAnalysisTab = tab;
     var views = ['day', 'week', 'month', 'calendar'];
-    var colors = { day: '#3498DB', week: '#2EBA8A', month: '#9B59B6', calendar: '#E74C3C' };
+
+    var gradients = {
+        day:      'linear-gradient(135deg,#3498DB,#2980b9)',
+        week:     'linear-gradient(135deg,#2EBA8A,#27a376)',
+        month:    'linear-gradient(135deg,#9B59B6,#8e44ad)',
+        calendar: 'linear-gradient(135deg,#E74C3C,#c0392b)'
+    };
+    var shadows = {
+        day:      'rgba(52,152,219,0.35)',
+        week:     'rgba(46,186,138,0.35)',
+        month:    'rgba(155,89,182,0.35)',
+        calendar: 'rgba(231,76,60,0.35)'
+    };
 
     views.forEach(function(v) {
-        var el = document.getElementById('an-view-' + v);
+        var el  = document.getElementById('an-view-' + v);
         var btn = document.getElementById('tab-' + v);
         if (!el || !btn) return;
         if (v === tab) {
             el.style.display = 'block';
-            btn.style.background = colors[tab];
-            btn.style.borderColor = colors[tab];
-            btn.style.color = '#fff';
+            btn.style.background  = gradients[tab];
+            btn.style.color       = '#fff';
+            btn.style.boxShadow   = '0 2px 8px ' + shadows[tab];
         } else {
-            el.style.display = 'none';
-            btn.style.background = '#fff';
-            btn.style.borderColor = '#e0e0e0';
-            btn.style.color = '#555';
+            el.style.display      = 'none';
+            btn.style.background  = 'transparent';
+            btn.style.color       = '#888';
+            btn.style.boxShadow   = 'none';
         }
     });
 
