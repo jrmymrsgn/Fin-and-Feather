@@ -250,25 +250,32 @@
     </section>
 
     <!-- View Toggle Tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <div style="background:#fff;border-radius:14px;padding:6px;display:inline-flex;gap:4px;
+                margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);flex-wrap:wrap;width:100%;box-sizing:border-box;">
         <button onclick="switchAnalysisTab('day')" id="tab-day"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #3498DB;background:#3498DB;
-                   color:#fff;font-weight:600;font-size:13px;cursor:pointer;">
+            style="flex:1;min-width:80px;padding:10px 18px;border-radius:10px;border:none;
+                   background:linear-gradient(135deg,#3498DB,#2980b9);
+                   color:#fff;font-weight:600;font-size:13px;cursor:pointer;
+                   box-shadow:0 2px 8px rgba(52,152,219,0.35);
+                   transition:all .2s ease;letter-spacing:0.3px;">
             <i class="fas fa-calendar-day" style="margin-right:6px;"></i>Daily
         </button>
         <button onclick="switchAnalysisTab('week')" id="tab-week"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
+            style="flex:1;min-width:80px;padding:10px 18px;border-radius:10px;border:none;
+                   background:transparent;color:#888;font-weight:600;font-size:13px;cursor:pointer;
+                   transition:all .2s ease;letter-spacing:0.3px;">
             <i class="fas fa-calendar-week" style="margin-right:6px;"></i>Weekly
         </button>
         <button onclick="switchAnalysisTab('month')" id="tab-month"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
+            style="flex:1;min-width:80px;padding:10px 18px;border-radius:10px;border:none;
+                   background:transparent;color:#888;font-weight:600;font-size:13px;cursor:pointer;
+                   transition:all .2s ease;letter-spacing:0.3px;">
             <i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Monthly
         </button>
         <button onclick="switchAnalysisTab('calendar')" id="tab-calendar"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
+            style="flex:1;min-width:80px;padding:10px 18px;border-radius:10px;border:none;
+                   background:transparent;color:#888;font-weight:600;font-size:13px;cursor:pointer;
+                   transition:all .2s ease;letter-spacing:0.3px;">
             <i class="fas fa-th" style="margin-right:6px;"></i>Calendar
         </button>
     </div>
