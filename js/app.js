@@ -626,16 +626,19 @@ function renderLogsGrouped(data) {
         return;
     }
 
-    // Sort client-side: newest first (no Firebase index required)
     const logsArray = Object.entries(data)
-        .map(([key, val]) => ({ ...val, _key: key }))
-        .filter(log => log.timestamp)                              // skip malformed entries
-        .sort((a, b) => b.timestamp - a.timestamp);               // newest first
+    .map(([key, val]) => ({ ...val, _key: key }));
 
+    logsArray.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+ 
+  
     // Group by date label
     const grouped = {};
     logsArray.forEach(log => {
-        const d = new Date(log.timestamp || Date.now());
+        const d = log.timestamp
+    ? new Date(log.timestamp)
+    : new Date();
         const label = d.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
         if (!grouped[label]) grouped[label] = [];
         grouped[label].push(log);
@@ -662,7 +665,11 @@ function renderLogsGrouped(data) {
             const iconClass = log.type === 'warning' ? 'fas fa-exclamation-triangle'
                             : log.type === 'error'   ? 'fas fa-times-circle'
                             : 'fas fa-check-circle';
-            const timeStr = log.time || new Date(log.timestamp).toLocaleTimeString();
+            const timeStr = log.time || (
+    log.timestamp
+        ? new Date(log.timestamp).toLocaleTimeString()
+        : '--:--:--'
+);
 
             const dashLi = `
                 <li style="display:flex;align-items:center;border-bottom:1px solid #eee;padding:10px;">
@@ -754,361 +761,444 @@ function getWeekKey(date) {
 //  Analytics — full rewrite
 //  Shows: Day / Week / Month views + calendar
 // ─────────────────────────────────────────────
+let feedChartInstance = null;
+let analyticsView     = "week";   // "day" | "week" | "month"
+let analyticsMonth    = new Date().getMonth();
+let analyticsYear     = new Date().getFullYear();
 
-// ─────────────────────────────────────────────
-//  Analysis — Tab switcher
-// ─────────────────────────────────────────────
-var currentAnalysisTab = 'day';
-
-function switchAnalysisTab(tab) {
-    currentAnalysisTab = tab;
-    var views = ['day', 'week', 'month', 'calendar'];
-    var colors = { day: '#3498DB', week: '#2EBA8A', month: '#9B59B6', calendar: '#E74C3C' };
-
-    views.forEach(function(v) {
-        var el = document.getElementById('an-view-' + v);
-        var btn = document.getElementById('tab-' + v);
-        if (!el || !btn) return;
-        if (v === tab) {
-            el.style.display = 'block';
-            btn.style.background = colors[tab];
-            btn.style.borderColor = colors[tab];
-            btn.style.color = '#fff';
-        } else {
-            el.style.display = 'none';
-            btn.style.background = '#fff';
-            btn.style.borderColor = '#e0e0e0';
-            btn.style.color = '#555';
-        }
+// Called from nav click to init view buttons
+function initAnalyticsTabs() {
+    var tabs = document.querySelectorAll(".an-tab");
+    tabs.forEach(function(tab) {
+        tab.addEventListener("click", function() {
+            tabs.forEach(function(t){ t.classList.remove("an-tab-active"); });
+            tab.classList.add("an-tab-active");
+            analyticsView = tab.getAttribute("data-view");
+            if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
+        });
     });
 
-    if (tab === 'calendar') renderCalendar();
+    var prevBtn = document.getElementById("an-cal-prev");
+    var nextBtn = document.getElementById("an-cal-next");
+    if (prevBtn) prevBtn.addEventListener("click", function() {
+        analyticsMonth--;
+        if (analyticsMonth < 0) { analyticsMonth = 11; analyticsYear--; }
+        if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
+    });
+    if (nextBtn) nextBtn.addEventListener("click", function() {
+        analyticsMonth++;
+        if (analyticsMonth > 11) { analyticsMonth = 0; analyticsYear++; }
+        if (window._lastLogsArray) renderAnalytics(window._lastLogsArray);
+    });
 }
-
-// ─────────────────────────────────────────────
-//  Analysis — Calendar state
-// ─────────────────────────────────────────────
-var calYear  = new Date().getFullYear();
-var calMonth = new Date().getMonth(); // 0-indexed
-var calDayData = {};  // populated by renderAnalytics
-
-function calPrev()    { calMonth--; if (calMonth < 0)  { calMonth = 11; calYear--; } renderCalendar(); }
-function calNext()    { calMonth++; if (calMonth > 11) { calMonth = 0;  calYear++; } renderCalendar(); }
-function calGoToday() { calYear = new Date().getFullYear(); calMonth = new Date().getMonth(); renderCalendar(); }
-
-function renderCalendar() {
-    var labelEl = document.getElementById('cal-month-label');
-    var grid    = document.getElementById('cal-grid');
-    var detail  = document.getElementById('cal-detail');
-    if (!grid) return;
-
-    var monthNames = ['January','February','March','April','May','June',
-                      'July','August','September','October','November','December'];
-    if (labelEl) labelEl.textContent = monthNames[calMonth] + ' ' + calYear;
-
-    var firstDay  = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
-    var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-    var todayKey  = new Date().toISOString().slice(0, 10);
-
-    var html = '';
-
-    // Empty cells before first day
-    for (var i = 0; i < firstDay; i++) {
-        html += '<div style="min-height:64px;"></div>';
-    }
-
-    for (var d = 1; d <= daysInMonth; d++) {
-        var mm   = String(calMonth + 1).padStart(2, '0');
-        var dd   = String(d).padStart(2, '0');
-        var key  = calYear + '-' + mm + '-' + dd;
-        var data = calDayData[key] || { count: 0, grams: 0 };
-        var isToday = (key === todayKey);
-
-        var bg = '#f5f5f5';
-        var textColor = '#bbb';
-        var countColor = '#ccc';
-        if (data.count >= 5) { bg = '#2EBA8A'; textColor = '#fff'; countColor = '#fff'; }
-        else if (data.count >= 3) { bg = '#3dbf7e'; textColor = '#fff'; countColor = '#fff'; }
-        else if (data.count >= 1) { bg = '#a8e6cf'; textColor = '#2d7a5f'; countColor = '#2d7a5f'; }
-        else { bg = '#f5f5f5'; textColor = '#bbb'; countColor = '#ddd'; }
-
-        var border = isToday ? '2px solid #3498DB' : '1px solid transparent';
-        var dayNumColor = isToday ? '#3498DB' : (data.count > 0 ? textColor : '#999');
-
-        html += '<div onclick="calSelectDay(\'' + key + '\')" style="' +
-            'min-height:64px;background:' + bg + ';border-radius:8px;padding:8px;' +
-            'cursor:pointer;border:' + border + ';transition:transform .1s;position:relative;' +
-            '" onmouseover="this.style.transform=\'scale(1.03)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
-            '<div style="font-size:13px;font-weight:700;color:' + dayNumColor + ';">' + d + '</div>';
-
-        if (data.count > 0) {
-            html += '<div style="font-size:18px;font-weight:800;color:' + countColor + ';line-height:1;margin-top:4px;">' + data.count + '</div>' +
-                    '<div style="font-size:10px;color:' + countColor + ';opacity:0.85;">' + data.grams + 'g</div>';
-        }
-        html += '</div>';
-    }
-
-    grid.innerHTML = html;
-    if (detail) detail.style.display = 'none';
-}
-
-function calSelectDay(key) {
-    var detail     = document.getElementById('cal-detail');
-    var detailDate = document.getElementById('cal-detail-date');
-    var detailBody = document.getElementById('cal-detail-body');
-    if (!detail) return;
-
-    var data = calDayData[key] || { count: 0, grams: 0 };
-    var d    = new Date(key + 'T00:00:00');
-    var label = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-    detailDate.textContent = label;
-
-    if (data.count === 0) {
-        detailBody.innerHTML = '<span style="color:#aaa;">No feeds recorded on this day.</span>';
-    } else {
-        detailBody.innerHTML =
-            '<span style="color:#2EBA8A;font-weight:700;font-size:16px;">' + data.count + ' feed' + (data.count !== 1 ? 's' : '') + '</span>' +
-            ' &nbsp;•&nbsp; <span style="color:#F39C12;font-weight:700;">' + data.grams + 'g total</span>' +
-            ' &nbsp;•&nbsp; <span style="color:#888;">avg ' + (data.count > 0 ? (data.grams / data.count).toFixed(1) : 0) + 'g/feed</span>';
-    }
-
-    detail.style.display = 'block';
-}
-
-// ─────────────────────────────────────────────
-//  Analytics — Main render
-// ─────────────────────────────────────────────
-var feedChartInstance      = null;
-var feedChartWeekInstance  = null;
-var feedChartMonthInstance = null;
 
 function renderAnalytics(logsArray) {
 
-    var byDay   = {};
-    var byWeek  = {};
-    var byMonth = {};
+    window._lastLogsArray = logsArray || [];
 
-    (logsArray || []).forEach(function(log) {
-        var grams = extractGrams(log.message);
+    const container = document.getElementById("analytics-container");
+
+    // Prevent loading crash
+    if (!container) {
+        console.log("Analytics container not found");
+        return;
+    }
+
+    // Prevent Chart.js crash
+    if (typeof Chart === "undefined") {
+        console.log("Chart.js not loaded yet");
+        return;
+    }
+
+    const byDay = {};
+    const byWeek = {};
+    const byMonth = {};
+
+    // ONLY USE MESSAGE GRAMS
+    (logsArray || []).forEach((log) => {
+
+        const grams = extractGrams(log.message);
+
         if (grams <= 0) return;
 
-        var d         = new Date(log.timestamp);
-        var dayKey    = d.toISOString().slice(0, 10);
-        var weekKey   = getWeekKey(d);
-        var monthKey  = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+        // Fake grouping without timestamp
+       const logDate = log.timestamp
+    ? new Date(log.timestamp)
+    : new Date();
 
-        if (!byDay[dayKey])     byDay[dayKey]     = { count: 0, grams: 0 };
-        if (!byWeek[weekKey])   byWeek[weekKey]   = { count: 0, grams: 0 };
-        if (!byMonth[monthKey]) byMonth[monthKey] = { count: 0, grams: 0 };
+const dayKey = logDate.toISOString().slice(0, 10);
 
-        byDay[dayKey].count++;    byDay[dayKey].grams    += grams;
-        byWeek[weekKey].count++;  byWeek[weekKey].grams  += grams;
-        byMonth[monthKey].count++;byMonth[monthKey].grams+= grams;
+const weekKey = getWeekKey(logDate);
+
+const monthKey =
+    logDate.getFullYear() +
+    "-" +
+    String(logDate.getMonth() + 1).padStart(2, "0");
+
+        
+
+        if (!byDay[dayKey]) {
+            byDay[dayKey] = { count: 0, grams: 0 };
+        }
+
+        if (!byWeek[weekKey]) {
+            byWeek[weekKey] = { count: 0, grams: 0 };
+        }
+
+        if (!byMonth[monthKey]) {
+            byMonth[monthKey] = { count: 0, grams: 0 };
+        }
+
+        byDay[dayKey].count++;
+        byDay[dayKey].grams += grams;
+
+        byWeek[weekKey].count++;
+        byWeek[weekKey].grams += grams;
+
+        byMonth[monthKey].count++;
+        byMonth[monthKey].grams += grams;
     });
 
-    // Share day data with calendar
-    calDayData = byDay;
-    if (currentAnalysisTab === 'calendar') renderCalendar();
+    const todayKey = new Date().toISOString().slice(0, 10);
 
-    var dayEntries   = Object.entries(byDay).sort(function(a,b){ return a[0].localeCompare(b[0]); });
-    var weekEntries  = Object.entries(byWeek).sort(function(a,b){ return b[0].localeCompare(a[0]); });
-    var monthEntries = Object.entries(byMonth).sort(function(a,b){ return b[0].localeCompare(a[0]); });
+    const thisWeekKey = getWeekKey(new Date());
 
-    var todayKey     = new Date().toISOString().slice(0, 10);
-    var thisWeekKey  = getWeekKey(new Date());
-    var now          = new Date();
-    var thisMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const nowMonth =
+        new Date().getFullYear() +
+        "-" +
+        String(new Date().getMonth() + 1).padStart(2, "0");
 
-    var todayData  = byDay[todayKey]      || { count: 0, grams: 0 };
-    var weekData   = byWeek[thisWeekKey]  || { count: 0, grams: 0 };
-    var monthData  = byMonth[thisMonthKey]|| { count: 0, grams: 0 };
-    var totalCount = dayEntries.reduce(function(s, e){ return s + e[1].count; }, 0);
-    var totalGrams = dayEntries.reduce(function(s, e){ return s + e[1].grams; }, 0);
+    const todayCount = (byDay[todayKey] || {}).count || 0;
+    const todayGrams = (byDay[todayKey] || {}).grams || 0;
 
-    function fmt(g) { return (g % 1 === 0) ? g + 'g' : g.toFixed(1) + 'g'; }
-    function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+    const weekCount = (byWeek[thisWeekKey] || {}).count || 0;
+    const weekGrams = (byWeek[thisWeekKey] || {}).grams || 0;
 
-    // Stat cards
-    setEl('an-today-count',    todayData.count);
-    setEl('an-today-grams',    fmt(todayData.grams));
-    setEl('an-week-count',     weekData.count);
-    setEl('an-week-grams',     fmt(weekData.grams));
-    setEl('an-month-count',    monthData.count);
-    setEl('an-month-grams',    fmt(monthData.grams));
-    setEl('an-total-count',    totalCount);
-    setEl('total-feed-dispensed', fmt(totalGrams));
+    const monthCount = (byMonth[nowMonth] || {}).count || 0;
+    const monthGrams = (byMonth[nowMonth] || {}).grams || 0;
 
-    // ── Daily table ────────────────────────────
-    var dayTable = document.getElementById('an-day-table');
-    if (dayTable) {
-        var dayRows = dayEntries.slice().reverse().slice(0, 30);
-        if (dayRows.length === 0) {
-            dayTable.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:16px;text-align:center;">No data yet.</td></tr>';
-        } else {
-            dayTable.innerHTML = dayRows.map(function(e) {
-                var key = e[0]; var v = e[1];
-                var d = new Date(key + 'T00:00:00');
-                var label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-                var isToday = key === todayKey;
-                var avg = v.count > 0 ? (v.grams / v.count).toFixed(1) : '0';
-                return '<tr style="' + (isToday ? 'background:#f0faf6;font-weight:600;' : '') + 'border-bottom:1px solid #f0f0f0;">' +
-                    '<td style="padding:11px 16px;color:#444;">' + (isToday ? '<span style="color:#2EBA8A;">\u25CF</span> Today &mdash; ' : '') + label + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#3498DB;font-weight:700;font-size:15px;">' + v.count + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#F39C12;font-weight:600;">' + fmt(v.grams) + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#2EBA8A;font-size:13px;">' + avg + 'g</td>' +
-                    '</tr>';
-            }).join('');
-        }
+    const totalCount = Object.values(byDay)
+        .reduce((s, v) => s + v.count, 0);
+
+    const totalGrams = Object.values(byDay)
+        .reduce((s, v) => s + v.grams, 0);
+
+    function fmt(g) {
+        return (g % 1 === 0)
+            ? g + "g"
+            : g.toFixed(1) + "g";
     }
 
-    // ── Weekly table ───────────────────────────
-    var weekTable = document.getElementById('an-week-table-body');
-    if (weekTable) {
-        if (weekEntries.length === 0) {
-            weekTable.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:16px;text-align:center;">No data yet.</td></tr>';
-        } else {
-            weekTable.innerHTML = weekEntries.slice(0, 12).map(function(e) {
-                var key = e[0]; var v = e[1];
-                var parts = key.split('-W'); var yr = parts[0]; var wk = parts[1];
-                var isThis = key === thisWeekKey;
-                var avg = v.count > 0 ? (v.grams / v.count).toFixed(1) : '0';
-                return '<tr style="' + (isThis ? 'background:#f0faf6;font-weight:600;' : '') + 'border-bottom:1px solid #f0f0f0;">' +
-                    '<td style="padding:11px 16px;color:#444;">Week ' + wk + ', ' + yr + (isThis ? ' <span style="font-size:11px;color:#2EBA8A;">(this week)</span>' : '') + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#3498DB;font-weight:700;font-size:15px;">' + v.count + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#F39C12;font-weight:600;">' + fmt(v.grams) + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#2EBA8A;font-size:13px;">' + avg + 'g</td>' +
-                    '</tr>';
-            }).join('');
-        }
+    function setEl(id, val) {
+        const el = document.getElementById(id);
+
+        if (el) el.textContent = val;
     }
 
-    // ── Monthly table ──────────────────────────
-    var monthTable = document.getElementById('an-month-table');
-    if (monthTable) {
-        var monthNames = ['January','February','March','April','May','June',
-                          'July','August','September','October','November','December'];
-        if (monthEntries.length === 0) {
-            monthTable.innerHTML = '<tr><td colspan="4" style="color:#aaa;padding:16px;text-align:center;">No data yet.</td></tr>';
-        } else {
-            monthTable.innerHTML = monthEntries.map(function(e) {
-                var key = e[0]; var v = e[1];
-                var parts = key.split('-'); var yr = parts[0]; var mo = parseInt(parts[1]) - 1;
-                var isThis = key === thisMonthKey;
-                var avg = v.count > 0 ? (v.grams / v.count).toFixed(1) : '0';
-                return '<tr style="' + (isThis ? 'background:#faf0ff;font-weight:600;' : '') + 'border-bottom:1px solid #f0f0f0;">' +
-                    '<td style="padding:11px 16px;color:#444;">' + monthNames[mo] + ' ' + yr + (isThis ? ' <span style="font-size:11px;color:#9B59B6;">(this month)</span>' : '') + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#3498DB;font-weight:700;font-size:15px;">' + v.count + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#F39C12;font-weight:600;">' + fmt(v.grams) + '</td>' +
-                    '<td style="padding:11px 16px;text-align:center;color:#2EBA8A;font-size:13px;">' + avg + 'g</td>' +
-                    '</tr>';
-            }).join('');
-        }
+    // Summary Cards
+    setEl("an-today-count", todayCount);
+    setEl("an-today-grams", fmt(todayGrams));
+
+    setEl("an-week-count", weekCount);
+    setEl("an-week-grams", fmt(weekGrams));
+
+    setEl("an-month-count", monthCount);
+    setEl("an-month-grams", fmt(monthGrams));
+
+    setEl("an-total-count", totalCount);
+
+    setEl("total-feed-dispensed", fmt(totalGrams));
+
+    // Views
+    if (analyticsView === "day") {
+        renderDayView(byDay, todayKey);
     }
 
-    // ── Daily Chart ────────────────────────────
-    var canvas = document.getElementById('feedChart');
-    if (canvas) {
-        var chartEntries = dayEntries.slice(-14);
-        if (feedChartInstance) feedChartInstance.destroy();
-        feedChartInstance = buildChart(canvas, chartEntries, todayKey, '#3498DB', 'rgba(52,152,219,0.12)', 'Daily Feeds');
+    if (analyticsView === "week") {
+        renderWeekView(byWeek, thisWeekKey);
     }
 
-    // ── Weekly Chart ───────────────────────────
-    var canvasWeek = document.getElementById('feedChartWeek');
-    if (canvasWeek) {
-        var wChartEntries = weekEntries.slice().reverse().slice(-8);
-        if (feedChartWeekInstance) feedChartWeekInstance.destroy();
-        feedChartWeekInstance = buildWeekChart(canvasWeek, wChartEntries, thisWeekKey);
-    }
-
-    // ── Monthly Chart ──────────────────────────
-    var canvasMonth = document.getElementById('feedChartMonth');
-    if (canvasMonth) {
-        var mChartEntries = monthEntries.slice().reverse();
-        if (feedChartMonthInstance) feedChartMonthInstance.destroy();
-        feedChartMonthInstance = buildMonthChart(canvasMonth, mChartEntries, thisMonthKey);
+    if (analyticsView === "month") {
+        renderMonthCalendar(byDay);
     }
 }
 
-function buildChart(canvas, entries, todayKey, color, fillColor, label) {
-    var labels = entries.map(function(e) {
-        if (e[0] === todayKey) return 'Today';
-        var d = new Date(e[0] + 'T00:00:00');
-        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+// ── DAY VIEW ───────────────────────────────────
+function renderDayView(byDay, todayKey) {
+    var entries = Object.entries(byDay).sort(function(a,b){ return a[0].localeCompare(b[0]); }).slice(-30);
+    var labels  = entries.map(function(e) {
+        var d = new Date(e[0] + "T00:00:00");
+        return e[0] === todayKey ? "Today" : d.toLocaleDateString(undefined, { month:"short", day:"numeric" });
     });
     var counts  = entries.map(function(e){ return e[1].count; });
     var grams   = entries.map(function(e){ return e[1].grams; });
-    var bgColors = entries.map(function(e){ return e[0] === todayKey ? '#2EBA8A' : color; });
+    var colors  = entries.map(function(e){ return e[0] === todayKey ? "#00C896" : "rgba(99,179,237,0.8)"; });
 
-    return new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Feeds', data: counts, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false, yAxisID: 'yCount', order: 1 },
-                { label: 'Grams', data: grams, type: 'line', borderColor: '#F39C12', backgroundColor: 'rgba(243,156,18,0.07)', borderWidth: 2, pointBackgroundColor: '#F39C12', pointRadius: 4, tension: 0.35, fill: true, yAxisID: 'yGrams', order: 0 }
-            ]
-        },
-        options: chartOptions('Feed Count', 'Grams')
+    buildChart(labels, counts, grams, colors, "Daily Feeds — Last 30 Days");
+    renderDetailTable(entries, "Date", function(key) {
+        var d = new Date(key + "T00:00:00");
+        return key === todayKey ? "Today" : d.toLocaleDateString(undefined, { weekday:"short", month:"short", day:"numeric" });
     });
 }
 
-function buildWeekChart(canvas, entries, thisWeekKey) {
-    var labels  = entries.map(function(e){ var p = e[0].split('-W'); return 'W' + p[1] + ' \'' + p[0].slice(2); });
+// ── WEEK VIEW ──────────────────────────────────
+function renderWeekView(byWeek, thisWeekKey) {
+    var entries = Object.entries(byWeek).sort(function(a,b){ return a[0].localeCompare(b[0]); }).slice(-12);
+    var labels  = entries.map(function(e) {
+        var parts = e[0].split("-W");
+        return e[0] === thisWeekKey ? "This Week" : "W" + parts[1] + " '" + parts[0].slice(2);
+    });
     var counts  = entries.map(function(e){ return e[1].count; });
     var grams   = entries.map(function(e){ return e[1].grams; });
-    var bgColors = entries.map(function(e){ return e[0] === thisWeekKey ? '#2EBA8A' : 'rgba(46,186,138,0.6)'; });
+    var colors  = entries.map(function(e){ return e[0] === thisWeekKey ? "#00C896" : "rgba(99,179,237,0.8)"; });
 
-    return new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Feeds', data: counts, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false, yAxisID: 'yCount', order: 1 },
-                { label: 'Grams', data: grams, type: 'line', borderColor: '#F39C12', backgroundColor: 'rgba(243,156,18,0.07)', borderWidth: 2, pointBackgroundColor: '#F39C12', pointRadius: 4, tension: 0.35, fill: true, yAxisID: 'yGrams', order: 0 }
-            ]
-        },
-        options: chartOptions('Feed Count', 'Grams')
+    buildChart(labels, counts, grams, colors, "Weekly Feeds — Last 12 Weeks");
+    renderDetailTable(entries, "Week", function(key) {
+        var parts = key.split("-W");
+        return (key === GetWeekKeyNow()) ? "<strong>Week " + parts[1] + ", " + parts[0] + "</strong> <span style='color:#00C896;font-size:11px;'>(current)</span>"
+            : "Week " + parts[1] + ", " + parts[0];
     });
 }
 
-function buildMonthChart(canvas, entries, thisMonthKey) {
-    var mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var labels  = entries.map(function(e){ var p = e[0].split('-'); return mNames[parseInt(p[1])-1] + ' ' + p[0]; });
-    var counts  = entries.map(function(e){ return e[1].count; });
-    var grams   = entries.map(function(e){ return e[1].grams; });
-    var bgColors = entries.map(function(e){ return e[0] === thisMonthKey ? '#9B59B6' : 'rgba(155,89,182,0.6)'; });
+function GetWeekKeyNow() { return getWeekKey(new Date()); }
 
-    return new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                { label: 'Feeds', data: counts, backgroundColor: bgColors, borderRadius: 6, borderSkipped: false, yAxisID: 'yCount', order: 1 },
-                { label: 'Grams', data: grams, type: 'line', borderColor: '#F39C12', backgroundColor: 'rgba(243,156,18,0.07)', borderWidth: 2, pointBackgroundColor: '#F39C12', pointRadius: 4, tension: 0.35, fill: true, yAxisID: 'yGrams', order: 0 }
-            ]
-        },
-        options: chartOptions('Feed Count', 'Grams')
+// ── MONTH CALENDAR VIEW ────────────────────────
+function renderMonthCalendar(byDay) {
+    var chartArea  = document.getElementById("an-chart-area");
+    var tableArea  = document.getElementById("an-table-area");
+    var calNav     = document.getElementById("an-cal-nav");
+    if (!chartArea) return;
+
+    if (calNav) calNav.style.display = "flex";
+
+    // Update month/year label
+    var monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var label = document.getElementById("an-cal-label");
+    if (label) label.textContent = monthNames[analyticsMonth] + " " + analyticsYear;
+
+    // Build calendar grid
+    var firstDay = new Date(analyticsYear, analyticsMonth, 1).getDay(); // 0=Sun
+    var daysInMonth = new Date(analyticsYear, analyticsMonth + 1, 0).getDate();
+    var todayKey = new Date().toISOString().slice(0, 10);
+
+    // Find max for heat scale
+    var monthMax = 1;
+    for (var d = 1; d <= daysInMonth; d++) {
+        var k = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0") + "-" + String(d).padStart(2,"0");
+        if (byDay[k] && byDay[k].count > monthMax) monthMax = byDay[k].count;
+    }
+
+    var html = '<div style="font-family:\'DM Sans\',sans-serif;">';
+
+    // Day headers
+    var dayHeaders = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">';
+    dayHeaders.forEach(function(d) {
+        html += '<div style="text-align:center;font-size:11px;font-weight:600;color:#94A3B8;padding:4px 0;">' + d + '</div>';
     });
-}
+    html += '</div>';
 
-function chartOptions(leftLabel, rightLabel) {
-    return {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        plugins: {
-            legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 12 } } },
-            tooltip: { callbacks: { label: function(ctx) {
-                return ctx.dataset.label === 'Feeds'
-                    ? ' ' + ctx.parsed.y + ' feed' + (ctx.parsed.y !== 1 ? 's' : '')
-                    : ' ' + ctx.parsed.y + 'g';
-            }}}
-        },
-        scales: {
-            yCount: { type: 'linear', position: 'left', beginAtZero: true, ticks: { stepSize: 1, precision: 0, color: '#3498DB', font: { size: 11 } }, grid: { color: '#f5f5f5' }, title: { display: true, text: leftLabel, color: '#3498DB', font: { size: 11 } } },
-            yGrams: { type: 'linear', position: 'right', beginAtZero: true, ticks: { color: '#F39C12', font: { size: 11 }, callback: function(v){ return v + 'g'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: rightLabel, color: '#F39C12', font: { size: 11 } } },
-            x: { ticks: { color: '#666', font: { size: 11 } }, grid: { display: false } }
+    // Calendar cells
+    html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">';
+
+    // Empty cells before first day
+    for (var i = 0; i < firstDay; i++) {
+        html += '<div style="aspect-ratio:1;"></div>';
+    }
+
+    for (var day = 1; day <= daysInMonth; day++) {
+        var dayKey = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0") + "-" + String(day).padStart(2,"0");
+        var data   = byDay[dayKey] || { count: 0, grams: 0 };
+        var isToday = dayKey === todayKey;
+        var intensity = data.count > 0 ? Math.max(0.15, data.count / monthMax) : 0;
+
+        var bg, textColor, border;
+        if (isToday) {
+            bg = "#00C896"; textColor = "#fff"; border = "2px solid #00C896";
+        } else if (data.count > 0) {
+            var r = Math.round(99  + (0   - 99)  * intensity);
+            var g = Math.round(179 + (200 - 179) * intensity);
+            var b = Math.round(237 + (150 - 237) * intensity);
+            bg = "rgba(" + r + "," + g + "," + b + "," + (0.2 + intensity * 0.8) + ")";
+            textColor = intensity > 0.5 ? "#fff" : "#1E293B";
+            border = "1px solid rgba(99,179,237,0.3)";
+        } else {
+            bg = "#F8FAFC"; textColor = "#CBD5E1"; border = "1px solid #E2E8F0";
         }
-    };
+
+        var tooltip = data.count > 0
+            ? 'title="' + data.count + ' feed' + (data.count !== 1 ? "s" : "") + ' · ' + (data.grams % 1 === 0 ? data.grams : data.grams.toFixed(1)) + 'g"'
+            : 'title="No feeds"';
+
+        html += '<div ' + tooltip + ' style="aspect-ratio:1;background:' + bg + ';border:' + border + ';border-radius:8px;' +
+            'display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;' +
+            'transition:transform .15s;position:relative;padding:2px;" ' +
+            'onmouseover="this.style.transform=\'scale(1.08)\'" onmouseout="this.style.transform=\'scale(1)\'">' +
+            '<span style="font-size:12px;font-weight:' + (isToday ? "700" : "500") + ';color:' + textColor + ';">' + day + '</span>' +
+            (data.count > 0 ? '<span style="font-size:9px;color:' + textColor + ';opacity:0.85;line-height:1;">' + data.count + 'x</span>' : '') +
+            '</div>';
+    }
+    html += '</div>';
+
+    // Legend
+    html += '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">';
+    html += '<span style="font-size:11px;color:#94A3B8;">Less</span>';
+    ["rgba(99,179,237,0.2)","rgba(99,179,237,0.4)","rgba(80,190,180,0.6)","rgba(40,200,150,0.8)","#00C896"].forEach(function(c) {
+        html += '<div style="width:16px;height:16px;background:' + c + ';border-radius:3px;border:1px solid rgba(0,0,0,0.05);"></div>';
+    });
+    html += '<span style="font-size:11px;color:#94A3B8;">More</span>';
+    html += '<div style="width:16px;height:16px;background:#00C896;border-radius:3px;border:2px solid #00C896;"></div>';
+    html += '<span style="font-size:11px;color:#94A3B8;">Today</span>';
+    html += '</div>';
+
+    html += '</div>';
+
+    chartArea.style.height = "auto";
+    chartArea.innerHTML = html;
+    if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
+
+    // Monthly summary table below calendar
+    if (tableArea) {
+        var monthName = monthNames[analyticsMonth];
+        var monthKey  = analyticsYear + "-" + String(analyticsMonth+1).padStart(2,"0");
+        var mCount = 0; var mGrams = 0;
+        for (var d2 = 1; d2 <= daysInMonth; d2++) {
+            var k2 = monthKey + "-" + String(d2).padStart(2,"0");
+            if (byDay[k2]) { mCount += byDay[k2].count; mGrams += byDay[k2].grams; }
+        }
+        tableArea.innerHTML =
+            '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;">' +
+            '<div style="flex:1;min-width:120px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#00C896;">' + mCount + '</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Total Feeds in ' + monthName + '</div></div>' +
+            '<div style="flex:1;min-width:120px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#F39C12;">' + (mGrams % 1 === 0 ? mGrams : mGrams.toFixed(1)) + 'g</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Total Grams in ' + monthName + '</div></div>' +
+            '<div style="flex:1;min-width:120px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px;text-align:center;">' +
+            '<div style="font-size:22px;font-weight:700;color:#3498DB;">' + (mCount > 0 ? (mGrams / mCount % 1 === 0 ? mGrams/mCount : (mGrams/mCount).toFixed(1)) + 'g' : "--") + '</div>' +
+            '<div style="font-size:12px;color:#555;margin-top:2px;">Avg Grams per Feed</div></div>' +
+            '</div>';
+    }
+}
+
+// ── Chart builder ──────────────────────────────
+function buildChart(labels, counts, grams, colors, title) {
+    var chartArea = document.getElementById("an-chart-area");
+    var calNav    = document.getElementById("an-cal-nav");
+    if (!chartArea) return;
+    if (calNav) calNav.style.display = "none";
+
+    chartArea.style.height = "280px";
+    chartArea.innerHTML = '<canvas id="feedChart"></canvas>';
+
+    var canvas = document.getElementById("feedChart");
+    if (!canvas) return;
+
+    if (feedChartInstance) { feedChartInstance.destroy(); feedChartInstance = null; }
+
+    feedChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Feeds Dispensed",
+                    data: counts,
+                    backgroundColor: colors,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    yAxisID: "yCount",
+                    order: 1
+                },
+                {
+                    label: "Grams",
+                    data: grams,
+                    type: "line",
+                    borderColor: "#F39C12",
+                    backgroundColor: "rgba(243,156,18,0.06)",
+                    borderWidth: 2.5,
+                    pointBackgroundColor: "#F39C12",
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: "yGrams",
+                    order: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: "index", intersect: false },
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: { usePointStyle: true, padding: 20, font: { size: 12, family: "DM Sans" } }
+                },
+                tooltip: {
+                    backgroundColor: "#1E293B",
+                    titleColor: "#94A3B8",
+                    bodyColor: "#F8FAFC",
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label === "Feeds Dispensed"
+                                ? "  " + ctx.parsed.y + " feed" + (ctx.parsed.y !== 1 ? "s" : "")
+                                : "  " + ctx.parsed.y + "g dispensed";
+                        }
+                    }
+                }
+            },
+            scales: {
+                yCount: {
+                    type: "linear", position: "left", beginAtZero: true,
+                    ticks: { stepSize: 1, precision: 0, color: "#63B3ED", font: { size: 11 } },
+                    grid: { color: "#F1F5F9" },
+                    title: { display: true, text: "Feeds", color: "#63B3ED", font: { size: 11 } }
+                },
+                yGrams: {
+                    type: "linear", position: "right", beginAtZero: true,
+                    ticks: { color: "#F39C12", font: { size: 11 }, callback: function(v){ return v + "g"; } },
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: "Grams", color: "#F39C12", font: { size: 11 } }
+                },
+                x: {
+                    ticks: { color: "#64748B", font: { size: 11 }, maxRotation: 45 },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+// ── Detail Table ───────────────────────────────
+function renderDetailTable(entries, colLabel, labelFn) {
+    var tableArea = document.getElementById("an-table-area");
+    if (!tableArea) return;
+
+    if (entries.length === 0) {
+        tableArea.innerHTML = '<p style="color:#94A3B8;font-size:13px;padding:16px 0;">No data yet.</p>';
+        return;
+    }
+
+    var reversed = entries.slice().reverse();
+    var rows = reversed.slice(0, 10).map(function(e) {
+        var key = e[0]; var v = e[1];
+        var fmt = function(g){ return (g % 1 === 0) ? g + "g" : g.toFixed(1) + "g"; };
+        return '<tr style="border-bottom:1px solid #F1F5F9;">' +
+            '<td style="padding:10px 14px;font-size:13px;color:#475569;">' + labelFn(key) + '</td>' +
+            '<td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700;color:#00C896;">' + v.count + '</td>' +
+            '<td style="padding:10px 14px;text-align:center;font-size:13px;color:#94A3B8;">' + fmt(v.grams) + '</td>' +
+            '</tr>';
+    }).join("");
+
+    tableArea.innerHTML =
+        '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
+        '<thead><tr style="background:#F8FAFC;border-bottom:2px solid #E2E8F0;">' +
+        '<th style="padding:10px 14px;text-align:left;color:#64748B;font-weight:600;">' + colLabel + '</th>' +
+        '<th style="padding:10px 14px;text-align:center;color:#00C896;font-weight:600;">Feeds</th>' +
+        '<th style="padding:10px 14px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
