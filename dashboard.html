@@ -4,14 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fin & Feather Feeding System</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="app-container">
+        <!-- Overlay -->
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
         
+        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2>Fin & Feather</h2>
@@ -30,6 +35,7 @@
             </nav>
         </aside>
 
+        <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
                 <div class="header-title" style="display: flex; align-items: center; gap: 15px;">
@@ -43,64 +49,74 @@
                 </div>
             </header>
 
+            <!-- Page Sections Container -->
             <div id="pages-container">
-
-                <!-- ── Dashboard ── -->
+                <!-- Dashboard Section -->
                 <div id="section-dashboard" class="page-section active-section">
-                    <section class="status-cards">
-                        <div class="card feed-level-card">
-                            <div class="card-header">Feed Level</div>
-                            <div class="card-body">
-                                <div class="level-value"><span id="feed-percentage">--</span>%</div>
-                                <div class="level-status" id="feed-status-text">Loading...</div>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" id="feed-progress-bar" style="width: 0%;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card last-feeding-card">
-                            <div class="card-header">Last Feeding</div>
-                            <div class="card-body">
-                                <div class="time-value" id="last-feeding-time">--:-- --</div>
-                                <div class="info-text"><span id="last-feeding-amount">--</span> g dispensed</div>
-                            </div>
-                        </div>
-                        <div class="card next-feeding-card">
-                            <div class="card-header">Next Feeding</div>
-                            <div class="card-body">
-                                <div class="time-value" id="next-feeding-time">--:-- --</div>
-                                <div class="info-text"><span id="next-feeding-countdown">--h --m</span></div>
-                            </div>
-                        </div>
-                    </section>
 
-                    <section class="details-section">
-                        <div class="card schedule-card">
-                            <div class="card-header border-bottom"><h3>Weekly Schedule</h3></div>
-                            <div class="card-body p-0">
-                                <ul class="schedule-list" id="schedule-list">
-                                    <li><i class="far fa-calendar-check schedule-icon"></i> Loading schedule...</li>
-                                </ul>
-                            </div>
+            <!-- Status Cards -->
+            <section class="status-cards">
+                <div class="card feed-level-card">
+                    <div class="card-header">Feed Level</div>
+                    <div class="card-body">
+                        <div class="level-value"><span id="feed-percentage">--</span>%</div>
+                        <div class="level-status" id="feed-status-text">Loading...</div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" id="feed-progress-bar" style="width: 0%;"></div>
                         </div>
-                        <div class="card logs-card">
-                            <div class="card-header border-bottom d-flex-between">
-                                <h3>Recent Logs</h3>
-                                <button class="btn-add" id="btn-manual-feed"><i class="fas fa-plus"></i> Feed Now</button>
-                            </div>
-                            <div class="card-body p-0">
-                                <ul class="logs-list" id="logs-list">
-                                    <li>Loading logs...</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </section>
+                    </div>
+                </div>
+                <div class="card last-feeding-card">
+                    <div class="card-header">Last Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="last-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="last-feeding-amount">--</span> g dispensed</div>
+                    </div>
+                </div>
+                <div class="card next-feeding-card">
+                    <div class="card-header">Next Feeding</div>
+                    <div class="card-body">
+                        <div class="time-value" id="next-feeding-time">--:-- --</div>
+                        <div class="info-text"><span id="next-feeding-countdown">--h --m</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Section (Schedule & Logs) -->
+            <section class="details-section">
+                <!-- Weekly Schedule -->
+                <div class="card schedule-card">
+                    <div class="card-header border-bottom">
+                        <h3>Weekly Schedule</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="schedule-list" id="schedule-list">
+                            <li><i class="far fa-calendar-check schedule-icon"></i> Loading schedule...</li>
+                        </ul>
+                    </div>
                 </div>
 
-                <!-- ── Schedule ── -->
+                <!-- Recent Logs -->
+                <div class="card logs-card">
+                    <div class="card-header border-bottom d-flex-between">
+                        <h3>Recent Logs</h3>
+                        <button class="btn-add" id="btn-manual-feed"><i class="fas fa-plus"></i> Feed Now</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="logs-list" id="logs-list">
+                            <li>Loading logs...</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+                </div> <!-- End Dashboard Section -->
+
+                <!-- Schedule Section -->
                 <div id="section-schedule" class="page-section" style="display: none;">
                     <div class="card" style="margin-bottom: 20px;">
-                        <div class="card-header border-bottom"><h3>Add New Feeding Schedule</h3></div>
+                        <div class="card-header border-bottom">
+                            <h3>Add New Feeding Schedule</h3>
+                        </div>
                         <div class="card-body">
                             <form id="schedule-form">
                                 <div style="margin-bottom: 15px;">
@@ -139,17 +155,21 @@
                             </form>
                         </div>
                     </div>
+                    
                     <div class="card">
-                        <div class="card-header border-bottom"><h3>Current Schedules</h3></div>
+                        <div class="card-header border-bottom">
+                            <h3>Current Schedules</h3>
+                        </div>
                         <div class="card-body p-0">
                             <ul class="schedule-list" id="full-schedule-list">
+                                <!-- Will be hydrated by JS -->
                                 <li>Loading schedules...</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Logs ── -->
+                <!-- Logs Section -->
                 <div id="section-logs" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom d-flex-between">
@@ -160,28 +180,32 @@
                         </div>
                         <div class="card-body p-0">
                             <ul class="logs-list" id="full-logs-list">
+                                <!-- Will be hydrated by JS -->
                                 <li>Loading historical logs...</li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- ── Edit Schedule Modal ── -->
+                <!-- Edit Schedule Modal -->
                 <div id="edit-schedule-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
                     <div style="background:#fff; border-radius:12px; padding:30px; width:90%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.2);">
                         <h3 style="margin-top:0; margin-bottom:20px;">Edit Schedule Entry</h3>
                         <input type="hidden" id="edit-schedule-key">
                         <div style="margin-bottom:15px;">
                             <label style="font-weight:bold; display:block; margin-bottom:5px;">Day</label>
-                            <input type="text" id="edit-schedule-day" readonly style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; background:#f5f5f5; box-sizing:border-box;">
+                            <input type="text" id="edit-schedule-day" readonly
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; background:#f5f5f5; box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:15px;">
                             <label style="font-weight:bold; display:block; margin-bottom:5px;">New Time</label>
-                            <input type="time" id="edit-schedule-time" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                            <input type="time" id="edit-schedule-time"
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
                         </div>
                         <div style="margin-bottom:20px;">
                             <label style="font-weight:bold; display:block; margin-bottom:5px;">Amount (grams)</label>
-                            <input type="number" id="edit-schedule-amount" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                            <input type="number" id="edit-schedule-amount"
+                                style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
                         </div>
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
                             <button id="btn-edit-schedule-cancel" style="padding:10px 20px; border:1px solid #ccc; background:#fff; border-radius:6px; cursor:pointer;">Cancel</button>
@@ -190,7 +214,7 @@
                     </div>
                 </div>
 
-                <!-- ── Inventory ── -->
+                <!-- Inventory Section -->
                 <div id="section-inventory" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom d-flex-between">
@@ -209,202 +233,78 @@
                     </div>
                 </div>
 
-                <!-- ── Analysis ── -->
-<!-- ── Analysis Section ── -->
-<div id="section-analysis" class="page-section" style="display:none;">
+                <!-- Analysis Section -->
+<div id="section-analysis" class="page-section" style="display: none;">
 
-    <!-- Top Stat Cards -->
-    <section class="status-cards" style="margin-bottom:20px;">
-        <div class="card" style="text-align:center;padding:22px 16px;border-top:4px solid #2EBA8A;">
-            <div style="font-size:12px;font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
-                <i class="fas fa-sun" style="color:#2EBA8A;margin-right:5px;"></i>Today
-            </div>
-            <div style="font-size:36px;font-weight:800;color:#2EBA8A;line-height:1;" id="an-today-count">--</div>
-            <div style="font-size:12px;color:#888;margin-top:4px;">feeds dispensed</div>
-            <div style="font-size:13px;font-weight:600;color:#555;margin-top:6px;" id="an-today-grams">-- g</div>
-        </div>
-        <div class="card" style="text-align:center;padding:22px 16px;border-top:4px solid #3498DB;">
-            <div style="font-size:12px;font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
-                <i class="fas fa-calendar-week" style="color:#3498DB;margin-right:5px;"></i>This Week
-            </div>
-            <div style="font-size:36px;font-weight:800;color:#3498DB;line-height:1;" id="an-week-count">--</div>
-            <div style="font-size:12px;color:#888;margin-top:4px;">feeds dispensed</div>
-            <div style="font-size:13px;font-weight:600;color:#555;margin-top:6px;" id="an-week-grams">-- g</div>
-        </div>
-        <div class="card" style="text-align:center;padding:22px 16px;border-top:4px solid #9B59B6;">
-            <div style="font-size:12px;font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
-                <i class="fas fa-calendar-alt" style="color:#9B59B6;margin-right:5px;"></i>This Month
-            </div>
-            <div style="font-size:36px;font-weight:800;color:#9B59B6;line-height:1;" id="an-month-count">--</div>
-            <div style="font-size:12px;color:#888;margin-top:4px;">feeds dispensed</div>
-            <div style="font-size:13px;font-weight:600;color:#555;margin-top:6px;" id="an-month-grams">-- g</div>
-        </div>
-        <div class="card" style="text-align:center;padding:22px 16px;border-top:4px solid #F39C12;">
-            <div style="font-size:12px;font-weight:600;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
-                <i class="fas fa-history" style="color:#F39C12;margin-right:5px;"></i>All Time
-            </div>
-            <div style="font-size:36px;font-weight:800;color:#F39C12;line-height:1;" id="an-total-count">--</div>
-            <div style="font-size:12px;color:#888;margin-top:4px;">total feeds</div>
-            <div style="font-size:13px;font-weight:600;color:#555;margin-top:6px;" id="total-feed-dispensed">-- g</div>
-        </div>
-    </section>
+    <div id="analytics-container">
 
-    <!-- View Toggle Tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-        <button onclick="switchAnalysisTab('day')" id="tab-day"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #3498DB;background:#3498DB;
-                   color:#fff;font-weight:600;font-size:13px;cursor:pointer;">
-            <i class="fas fa-calendar-day" style="margin-right:6px;"></i>Daily
-        </button>
-        <button onclick="switchAnalysisTab('week')" id="tab-week"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
-            <i class="fas fa-calendar-week" style="margin-right:6px;"></i>Weekly
-        </button>
-        <button onclick="switchAnalysisTab('month')" id="tab-month"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
-            <i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Monthly
-        </button>
-        <button onclick="switchAnalysisTab('calendar')" id="tab-calendar"
-            style="padding:9px 20px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;
-                   color:#555;font-weight:600;font-size:13px;cursor:pointer;">
-            <i class="fas fa-th" style="margin-right:6px;"></i>Calendar
-        </button>
-    </div>
+        <!-- Summary Cards -->
+        <section class="status-cards" style="margin-bottom:20px;">
 
-    <!-- Daily View -->
-    <div id="an-view-day">
-        <div class="card" style="margin-bottom:16px;">
-            <div class="card-header border-bottom" style="display:flex;align-items:center;justify-content:space-between;">
-                <h3 style="margin:0;"><i class="fas fa-chart-bar" style="color:#3498DB;margin-right:8px;"></i>Daily Feed Count</h3>
-                <span style="font-size:12px;color:#aaa;">Last 14 days • updates live</span>
+            <div class="card" style="text-align:center;padding:20px;">
+                <div style="font-size:13px;color:#aaa;">Today</div>
+                <div id="an-today-count" style="font-size:30px;font-weight:700;">0</div>
+                <div id="an-today-grams" style="font-size:12px;color:#888;">0g</div>
             </div>
+
+            <div class="card" style="text-align:center;padding:20px;">
+                <div style="font-size:13px;color:#aaa;">This Week</div>
+                <div id="an-week-count" style="font-size:30px;font-weight:700;">0</div>
+                <div id="an-week-grams" style="font-size:12px;color:#888;">0g</div>
+            </div>
+
+            <div class="card" style="text-align:center;padding:20px;">
+                <div style="font-size:13px;color:#aaa;">This Month</div>
+                <div id="an-month-count" style="font-size:30px;font-weight:700;">0</div>
+                <div id="an-month-grams" style="font-size:12px;color:#888;">0g</div>
+            </div>
+
+            <div class="card" style="text-align:center;padding:20px;">
+                <div style="font-size:13px;color:#aaa;">All Time</div>
+                <div id="an-total-count" style="font-size:30px;font-weight:700;">0</div>
+                <div id="total-feed-dispensed" style="font-size:12px;color:#888;">0g</div>
+            </div>
+
+        </section>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+            <button class="an-tab an-tab-active" data-view="week">Week</button>
+            <button class="an-tab" data-view="day">Day</button>
+            <button class="an-tab" data-view="month">Month</button>
+        </div>
+
+        <!-- Calendar Navigation -->
+        <div id="an-cal-nav"
+             style="display:none;justify-content:center;align-items:center;gap:15px;margin-bottom:15px;">
+
+            <button id="an-cal-prev">◀</button>
+
+            <span id="an-cal-label"
+                  style="font-weight:600;"></span>
+
+            <button id="an-cal-next">▶</button>
+
+        </div>
+
+        <!-- Chart / Calendar -->
+        <div class="card" style="margin-bottom:20px;">
             <div class="card-body">
-                <div style="height:300px;position:relative;"><canvas id="feedChart"></canvas></div>
+                <div id="an-chart-area" style="height:280px;"></div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header border-bottom"><h3 style="margin:0;"><i class="fas fa-list" style="color:#3498DB;margin-right:8px;"></i>Daily Breakdown</h3></div>
-            <div class="card-body p-0">
-                <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                    <thead>
-                        <tr style="background:#f7f9fc;border-bottom:2px solid #eee;">
-                            <th style="padding:12px 16px;text-align:left;color:#555;font-weight:600;">Date</th>
-                            <th style="padding:12px 16px;text-align:center;color:#3498DB;font-weight:600;">Feeds</th>
-                            <th style="padding:12px 16px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>
-                            <th style="padding:12px 16px;text-align:center;color:#2EBA8A;font-weight:600;">Avg/Feed</th>
-                        </tr>
-                    </thead>
-                    <tbody id="an-day-table"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
-    <!-- Weekly View -->
-    <div id="an-view-week" style="display:none;">
-        <div class="card" style="margin-bottom:16px;">
-            <div class="card-header border-bottom" style="display:flex;align-items:center;justify-content:space-between;">
-                <h3 style="margin:0;"><i class="fas fa-chart-bar" style="color:#2EBA8A;margin-right:8px;"></i>Weekly Feed Count</h3>
-                <span style="font-size:12px;color:#aaa;">Last 8 weeks • updates live</span>
-            </div>
-            <div class="card-body">
-                <div style="height:300px;position:relative;"><canvas id="feedChartWeek"></canvas></div>
-            </div>
-        </div>
+        <!-- Table -->
         <div class="card">
-            <div class="card-header border-bottom"><h3 style="margin:0;"><i class="fas fa-list" style="color:#2EBA8A;margin-right:8px;"></i>Weekly Breakdown</h3></div>
-            <div class="card-body p-0">
-                <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                    <thead>
-                        <tr style="background:#f7f9fc;border-bottom:2px solid #eee;">
-                            <th style="padding:12px 16px;text-align:left;color:#555;font-weight:600;">Week</th>
-                            <th style="padding:12px 16px;text-align:center;color:#3498DB;font-weight:600;">Feeds</th>
-                            <th style="padding:12px 16px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>
-                            <th style="padding:12px 16px;text-align:center;color:#2EBA8A;font-weight:600;">Avg/Feed</th>
-                        </tr>
-                    </thead>
-                    <tbody id="an-week-table-body"></tbody>
-                </table>
+            <div class="card-body">
+                <div id="an-table-area"></div>
             </div>
         </div>
-    </div>
 
-    <!-- Monthly View -->
-    <div id="an-view-month" style="display:none;">
-        <div class="card" style="margin-bottom:16px;">
-            <div class="card-header border-bottom" style="display:flex;align-items:center;justify-content:space-between;">
-                <h3 style="margin:0;"><i class="fas fa-chart-bar" style="color:#9B59B6;margin-right:8px;"></i>Monthly Feed Count</h3>
-                <span style="font-size:12px;color:#aaa;">Updates live</span>
-            </div>
-            <div class="card-body">
-                <div style="height:300px;position:relative;"><canvas id="feedChartMonth"></canvas></div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header border-bottom"><h3 style="margin:0;"><i class="fas fa-list" style="color:#9B59B6;margin-right:8px;"></i>Monthly Breakdown</h3></div>
-            <div class="card-body p-0">
-                <table style="width:100%;border-collapse:collapse;font-size:14px;">
-                    <thead>
-                        <tr style="background:#f7f9fc;border-bottom:2px solid #eee;">
-                            <th style="padding:12px 16px;text-align:left;color:#555;font-weight:600;">Month</th>
-                            <th style="padding:12px 16px;text-align:center;color:#3498DB;font-weight:600;">Feeds</th>
-                            <th style="padding:12px 16px;text-align:center;color:#F39C12;font-weight:600;">Grams</th>
-                            <th style="padding:12px 16px;text-align:center;color:#2EBA8A;font-weight:600;">Avg/Feed</th>
-                        </tr>
-                    </thead>
-                    <tbody id="an-month-table"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Calendar View -->
-    <div id="an-view-calendar" style="display:none;">
-        <div class="card">
-            <div class="card-header border-bottom" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-                <h3 style="margin:0;"><i class="fas fa-th" style="color:#E74C3C;margin-right:8px;"></i>Feed Calendar</h3>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <button onclick="calPrev()" style="border:1px solid #ddd;background:#fff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:14px;">&#8249;</button>
-                    <span id="cal-month-label" style="font-weight:700;font-size:15px;color:#333;min-width:140px;text-align:center;"></span>
-                    <button onclick="calNext()" style="border:1px solid #ddd;background:#fff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:14px;">&#8250;</button>
-                    <button onclick="calGoToday()" style="border:1px solid #3498DB;background:#3498DB;color:#fff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:13px;font-weight:600;">Today</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Legend -->
-                <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;font-size:12px;color:#888;align-items:center;">
-                    <span style="font-weight:600;">Feeds:</span>
-                    <span><span style="display:inline-block;width:16px;height:16px;background:#e8f5e9;border-radius:3px;vertical-align:middle;margin-right:4px;border:1px solid #ddd;"></span>None</span>
-                    <span><span style="display:inline-block;width:16px;height:16px;background:#a8e6cf;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>1–2</span>
-                    <span><span style="display:inline-block;width:16px;height:16px;background:#3dbf7e;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>3–4</span>
-                    <span><span style="display:inline-block;width:16px;height:16px;background:#2EBA8A;border-radius:3px;vertical-align:middle;margin-right:4px;"></span>5+</span>
-                </div>
-                <!-- Day headers -->
-                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Sun</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Mon</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Tue</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Wed</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Thu</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Fri</div>
-                    <div style="text-align:center;font-size:12px;font-weight:700;color:#aaa;padding:6px;">Sat</div>
-                </div>
-                <!-- Calendar grid -->
-                <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
-                <!-- Selected day detail -->
-                <div id="cal-detail" style="display:none;margin-top:16px;padding:14px;background:#f7f9fc;border-radius:10px;border-left:4px solid #2EBA8A;">
-                    <div style="font-weight:700;font-size:14px;color:#333;margin-bottom:6px;" id="cal-detail-date"></div>
-                    <div style="font-size:13px;color:#555;" id="cal-detail-body"></div>
-                </div>
-            </div>
-        </div>
     </div>
 
 </div>
-
-                <!-- ── Settings ── -->
+                <!-- Settings Section -->
                 <div id="section-settings" class="page-section" style="display: none;">
                     <div class="card">
                         <div class="card-header border-bottom"><h3>System Configuration</h3></div>
@@ -418,9 +318,11 @@
                                     <input type="checkbox" id="setting-sms-enable" checked> Enable SMS Alerts
                                 </label>
                             </div>
+                            <!-- Servo Timing Configurations -->
                             <div style="background:var(--color-bg); padding:15px; border-radius:8px; border:1px solid #eee; margin-top:5px;">
                                 <h4 style="margin-top:0; margin-bottom:10px;">Feeder Servo Timing Configuration</h4>
                                 <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">Configure the time the servo opens and closes to dispense the correct amount of feed.</p>
+                                
                                 <div style="display:flex; gap:20px; flex-wrap:wrap;">
                                     <div style="flex:1; min-width:200px;">
                                         <label style="display:block; font-weight:bold; margin-bottom:5px;">Servo Open Time (ms)</label>
@@ -432,20 +334,23 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Hopper Height Configuration -->
                             <div style="background:var(--color-bg); padding:15px; border-radius:8px; border:1px solid #eee; margin-top:5px;">
                                 <h4 style="margin-top:0; margin-bottom:10px;">Hopper Height Configuration</h4>
                                 <p style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">
                                     Set the <strong>empty hopper height</strong> in centimeters — this is the distance from the ultrasonic sensor 
-                                    down to the bottom of the hopper when it is completely empty.
+                                    down to the bottom of the hopper when it is completely empty. This is used to accurately calculate the feed level percentage.
                                 </p>
                                 <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-end;">
                                     <div style="flex:1; min-width:200px;">
                                         <label style="display:block; font-weight:bold; margin-bottom:5px;">Empty Hopper Height (cm)</label>
-                                        <input type="number" id="setting-hopper-height" placeholder="e.g. 20" min="5" max="200" style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
+                                        <input type="number" id="setting-hopper-height" placeholder="e.g. 20" min="5" max="200"
+                                            style="padding:10px; width:100%; border:1px solid #ccc; border-radius:5px;">
                                     </div>
                                     <div style="flex:1; min-width:200px;">
                                         <p style="font-size:12px; color:#888; margin:0;">
-                                            <i class="fas fa-info-circle"></i> Measure with a ruler from the sensor to the <em>empty</em> hopper floor. Typical range: 10–50 cm.
+                                            <i class="fas fa-info-circle"></i> Measure with a ruler from the sensor to the <em>empty</em> hopper floor. 
+                                            Typical range: 10–50 cm.
                                         </p>
                                     </div>
                                 </div>
@@ -454,8 +359,7 @@
                         </div>
                     </div>
                 </div>
-
-            </div><!-- end pages-container -->
+            </div> <!-- End Pages Container -->
         </main>
     </div>
 
@@ -463,6 +367,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    
+    <!-- Custom Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/app.js"></script>
